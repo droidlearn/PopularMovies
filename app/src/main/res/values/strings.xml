@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Popular Movies</string>
+    <string name="action_settings" translatable="false">Settings</string>
+    <string name="action_refresh" translatable="false">Refresh</string>
+
+
+    <!-- Label for the sort options   -->
+    <string name="pref_sort_label">Show movies ordered by</string>
+
+    <!-- Label for sort by populatrity  -->
+    <string name="pref_sort_label_most_popular">Most Popular</string>
+
+    <!-- Label for sort by ratings -->
+    <string name="pref_sort_label_highest_rated">Highest Rated</string>
+
+    <!-- Key name for sorting   -->
+    <string name="pref_sort_key" translatable="false">sort</string>
+
+    <string name="pref_sort_default" translatable="false">popularity.desc</string>
+
+    <!-- Value in sort by most popular -->
+    <string name="pref_sort_most_popular" translatable="false">popularity.desc</string>
+
+    <!-- Value in sort by highest rating -->
+    <string name="pref_sort_highest_rated" translatable="false">vote_average.desc</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_detail">Movie Details</string>
+    <string name="action_share">Share</string>
+
+
+
+</resources>
