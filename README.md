@@ -1,3 +1,2 @@
 # PopularMovies
-Discover most popular movies playing
-v0.1 Grid view with static images
+Discover most popular movies playing by viewing most popular movies or highest rated movies.
