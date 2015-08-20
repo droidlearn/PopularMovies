@@ -1,7 +1,10 @@
 package com.myapp.android.popularmovies;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -42,13 +45,19 @@ public class MovieFragment extends Fragment {
 
     private final String TAG = MovieFragment.class.getSimpleName();
 
-    private final String API_DEV_KEY = "XXXXXXXXXXXXXXXXXXXXXX.";
-
+    //private final String API_DEV_KEY = "XXXXXXXXXXXXXXXXXXXXXX.";
+    
     private ImageAdapter mImageAdapter;
 
     private ArrayList<MovieInfo> movieInfos;
 
     private GridView gridView;
+
+    private String mSortBy = null;
+
+    private boolean mIsData = false;
+
+    private SharedPreferences.OnSharedPreferenceChangeListener mListener = null;
 
     public MovieFragment() {
         movieInfos = new ArrayList<MovieInfo>();
@@ -57,25 +66,75 @@ public class MovieFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        Log.d(TAG, "onSaveInstanceState called");
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList("movies", movieInfos);
+
     }
 
-
-
+    /*
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        Log.v(TAG, "onActivityCreated called");
+        super.onActivityCreated(savedInstanceState);
+        if (savedInstanceState != null) {
+            movieInfos = savedInstanceState.getParcelableArrayList("movies");
+        }
+        else
+        {
+            if (null == movieInfos || movieInfos.isEmpty())
+            {
+                movieInfos = new ArrayList<MovieInfo>();
+                updateMovies();
+            }
+            //returning from back stack, data is fine, no action is needed
+        }
+    }
+    */
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate called");
         super.onCreate(savedInstanceState);
-        // Add this line in order for this fragment to handle menu events.
+
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+
+            mListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+
+                /* When preferences change data needs to be re-fetched due to change in conditions */
+                mIsData = false;
+
+            }
+        };
+
+
+        prefs.registerOnSharedPreferenceChangeListener(mListener);
+
         if(savedInstanceState == null || !savedInstanceState.containsKey("movies")) {
-            movieInfos = new ArrayList<MovieInfo>();
+           movieInfos = new ArrayList<MovieInfo>();
+           mIsData = false;
         }
         else {
+            Log.d(TAG, "onCreate using savedInstanceState to refresh the view");
+            /*
+            if (null != mImageAdapter) {
+                mImageAdapter.clear();
+                mImageAdapter.notifyDataSetChanged();
+            }
+            */
             movieInfos = savedInstanceState.getParcelableArrayList("movies");
+            Log.d(TAG, "onCreate using savedInstanceState Size of data retrieved = " + movieInfos.size());
+            mIsData = true;
+            /*
+            //mImageAdapter.notifyDataSetChanged();
+            mImageAdapter = new ImageAdapter(getActivity().getApplicationContext(), movieInfos);
+            gridView.setAdapter(mImageAdapter);
+             */
         }
 
-
+        // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
 
 
@@ -95,12 +154,11 @@ public class MovieFragment extends Fragment {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == R.id.action_refresh) {
-            updateMovies();
-            return true;
-        }
         return super.onOptionsItemSelected(item);
     }
+
+
+
 
 
 
@@ -108,11 +166,12 @@ public class MovieFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        Log.d(TAG, "onCreateView called");
+
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-
-        mImageAdapter = new ImageAdapter(getActivity().getApplicationContext(), null);
+        mImageAdapter = new ImageAdapter(getActivity().getApplicationContext(), movieInfos);
 
         // Get a reference to the GridView, and attach this adapter to it.
 
@@ -149,14 +208,38 @@ public class MovieFragment extends Fragment {
 
     @Override
     public void onStart() {
+        Log.d(TAG, "onStart called");
         super.onStart();
-        movieInfos = new ArrayList<MovieInfo>();
-        updateMovies();
+
+        // Fetch new data on preference change or when there is no data to begin with
+        if (!mIsData) {
+            movieInfos = new ArrayList<MovieInfo>();
+            updateMovies();
+
+        }
+
+    }
+
+
+    //Based on a stackoverflow snippet
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
 
     private void updateMovies() {
+
+        if (! isNetworkAvailable())
+        {
+            Log.i(TAG, "No network connectivity available ");
+            return;
+        }
+
         FetchMovieInfoTask movieInfoTask = new FetchMovieInfoTask();
+
 
         SharedPreferences sharedPrefs =
                 PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -164,10 +247,11 @@ public class MovieFragment extends Fragment {
                 getString(R.string.pref_sort_key),
                 getString(R.string.pref_sort_most_popular));
 
-        //String sortby = "popularity.desc";
         Log.v(TAG, "Sort by = " + sortby);
+        mSortBy = sortby;
 
-        movieInfoTask.execute(sortby);
+
+        movieInfoTask.execute(mSortBy);
     }
 
 
@@ -281,6 +365,7 @@ public class MovieFragment extends Fragment {
                 movieInfos.add(i, new MovieInfo(id, original_title, poster_image, plot_synopsis, user_rating, release_date, backdrop_path));
             }
 
+            mIsData = true;
             return movieInfos;
         }
 
@@ -394,10 +479,10 @@ public class MovieFragment extends Fragment {
 
         @Override
         protected void onPostExecute(ArrayList<MovieInfo> result) {
-
+            Log.d(TAG, "onPostExecute called");
             super.onPostExecute(result);
             if (result != null) {
-
+                Log.d(TAG, "onPostExecute, clearing and re-init of adapter");
                 mImageAdapter.clear();
                 mImageAdapter.notifyDataSetChanged();
                 mImageAdapter = new ImageAdapter(getActivity().getApplicationContext(), result);
