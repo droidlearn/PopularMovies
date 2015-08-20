@@ -72,25 +72,6 @@ public class MovieFragment extends Fragment {
 
     }
 
-    /*
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        Log.v(TAG, "onActivityCreated called");
-        super.onActivityCreated(savedInstanceState);
-        if (savedInstanceState != null) {
-            movieInfos = savedInstanceState.getParcelableArrayList("movies");
-        }
-        else
-        {
-            if (null == movieInfos || movieInfos.isEmpty())
-            {
-                movieInfos = new ArrayList<MovieInfo>();
-                updateMovies();
-            }
-            //returning from back stack, data is fine, no action is needed
-        }
-    }
-    */
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -118,20 +99,10 @@ public class MovieFragment extends Fragment {
         }
         else {
             Log.d(TAG, "onCreate using savedInstanceState to refresh the view");
-            /*
-            if (null != mImageAdapter) {
-                mImageAdapter.clear();
-                mImageAdapter.notifyDataSetChanged();
-            }
-            */
+
             movieInfos = savedInstanceState.getParcelableArrayList("movies");
             Log.d(TAG, "onCreate using savedInstanceState Size of data retrieved = " + movieInfos.size());
             mIsData = true;
-            /*
-            //mImageAdapter.notifyDataSetChanged();
-            mImageAdapter = new ImageAdapter(getActivity().getApplicationContext(), movieInfos);
-            gridView.setAdapter(mImageAdapter);
-             */
         }
 
         // Add this line in order for this fragment to handle menu events.
@@ -196,8 +167,6 @@ public class MovieFragment extends Fragment {
                 intent.putExtra("com.myapp.android.popularmovies.SelectedMovie", mip);
 
                 startActivity(intent);
-
-
             }
 
 
@@ -209,6 +178,7 @@ public class MovieFragment extends Fragment {
     @Override
     public void onStart() {
         Log.d(TAG, "onStart called");
+
         super.onStart();
 
         // Fetch new data on preference change or when there is no data to begin with
@@ -247,7 +217,7 @@ public class MovieFragment extends Fragment {
                 getString(R.string.pref_sort_key),
                 getString(R.string.pref_sort_most_popular));
 
-        Log.v(TAG, "Sort by = " + sortby);
+        Log.d(TAG, "Sort by = " + sortby);
         mSortBy = sortby;
 
 
@@ -354,12 +324,12 @@ public class MovieFragment extends Fragment {
                 }
 
 
-                Log.v(TAG, "Movie Info for ****  id: (index) " + id + "(" + i + ")");
-                Log.v(TAG, "title  : " + original_title);
-                Log.v(TAG, "image  : " + poster_image);
-                Log.v(TAG, "plot   : " + plot_synopsis);
-                Log.v(TAG, "rating : " + user_rating);
-                Log.v(TAG, "release: " + release_date);
+                Log.d(TAG, "Movie Info for ****  id: (index) " + id + "(" + i + ")");
+                Log.d(TAG, "title  : " + original_title);
+                Log.d(TAG, "image  : " + poster_image);
+                Log.d(TAG, "plot   : " + plot_synopsis);
+                Log.d(TAG, "rating : " + user_rating);
+                Log.d(TAG, "release: " + release_date);
 
 
                 movieInfos.add(i, new MovieInfo(id, original_title, poster_image, plot_synopsis, user_rating, release_date, backdrop_path));
