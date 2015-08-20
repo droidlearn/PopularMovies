@@ -45,8 +45,8 @@ public class MovieFragment extends Fragment {
 
     private final String TAG = MovieFragment.class.getSimpleName();
 
-    //private final String API_DEV_KEY = "XXXXXXXXXXXXXXXXXXXXXX.";
-    
+    private final String API_DEV_KEY = "XXXXXXXXXXXXXXXXXXXXXX.";
+
     private ImageAdapter mImageAdapter;
 
     private ArrayList<MovieInfo> movieInfos;
