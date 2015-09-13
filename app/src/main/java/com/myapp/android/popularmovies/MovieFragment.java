@@ -45,8 +45,6 @@ public class MovieFragment extends Fragment {
 
     private final String TAG = MovieFragment.class.getSimpleName();
 
-    private final String API_DEV_KEY = "XXXXXXXXXXXXXXXXXXXXXX.";
-
     private ImageAdapter mImageAdapter;
 
     private ArrayList<MovieInfo> movieInfos;
@@ -376,7 +374,7 @@ public class MovieFragment extends Fragment {
 
                 Uri builtUri = Uri.parse(MOVIE_BASE_URL).buildUpon()
                         .appendQueryParameter(QUERY_PARAM, params[0])
-                        .appendQueryParameter(API_KEY, API_DEV_KEY)
+                        .appendQueryParameter(API_KEY, getString(R.string.API_DEV_KEY))
                         .build();
 
                 Log.v(TAG, "Built URI=" + builtUri.toString());
