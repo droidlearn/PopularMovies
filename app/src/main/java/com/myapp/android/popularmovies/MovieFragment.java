@@ -330,6 +330,12 @@ public class MovieFragment extends Fragment {
                 Log.d(TAG, "release: " + release_date);
 
 
+
+
+
+
+
+
                 movieInfos.add(i, new MovieInfo(id, original_title, poster_image, plot_synopsis, user_rating, release_date, backdrop_path));
             }
 
