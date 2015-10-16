@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="API_DEV_KEY"></string>
+    <string name="API_DEV_KEY">12345678</string>
 
 </resources>

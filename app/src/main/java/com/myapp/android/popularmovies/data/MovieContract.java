@@ -19,10 +19,9 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.text.format.Time;
 
 /**
- * Defines table and column names for the weather database.
+ * Defines table and column names for the Movie database.
  */
 public class MovieContract {
 
@@ -37,24 +36,10 @@ public class MovieContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     // Possible paths (appended to base content URI for possible URI's)
-    // For instance, content://com.example.android.sunshine.app/weather/ is a valid path for
-    // looking at weather data. content://com.example.android.sunshine.app/givemeroot/ will fail,
-    // as the ContentProvider hasn't been given any information on what to do with "givemeroot".
-    // At least, let's hope not.  Don't be that dev, reader.  Don't be that dev.
+
     public static final String PATH_MOVIE = "movie";
     public static final String PATH_REVIEW = "review";
     public static final String PATH_TRAILER = "trailer";
-
-    // To make it easy to query for the exact date, we normalize all dates that go into
-    // the database to the start of the the Julian day at UTC.
-    public static long normalizeDate(long startDate) {
-        // normalize the start date to the beginning of the (UTC) day
-        Time time = new Time();
-        time.set(startDate);
-        int julianDay = Time.getJulianDay(startDate, time.gmtoff);
-        return time.setJulianDay(julianDay);
-    }
-
 
 
     public static final class MovieEntry implements BaseColumns {
@@ -85,6 +70,10 @@ public class MovieContract {
         public static final String COLUMN_PIVOT = "pivot_type";
 
 
+        public static Uri buildMovieSortBy(String sortBy) {
+            return CONTENT_URI.buildUpon().appendPath(sortBy).build();
+        }
+
 
         public static Uri buildMovieUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
@@ -101,6 +90,15 @@ public class MovieContract {
         public static Uri buildMovieWithFavoriteSetting(String FavoriteSetting) {
             return CONTENT_URI.buildUpon().appendPath(FavoriteSetting).build();
         }
+
+        public static String getTypeSettingFromUri(Uri uri) {
+            return uri.getPathSegments().get(1);
+        }
+
+        public static String getMovieIDSettingFromUri(Uri uri) {
+            return uri.getPathSegments().get(2);
+        }
+
 
     }
 
@@ -125,7 +123,7 @@ public class MovieContract {
 
         public static final String COLUMN_REVIEW_STR = "review_str";
 
-        public static Uri buildLocationUri(long id) {
+        public static Uri buildReviewUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
     }
@@ -134,7 +132,7 @@ public class MovieContract {
     public static final class TrailerEntry implements BaseColumns {
 
         public static final Uri CONTENT_URI =
-                BASE_CONTENT_URI.buildUpon().appendPath(PATH_REVIEW).build();
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_TRAILER).build();
 
         public static final String CONTENT_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_TRAILER;

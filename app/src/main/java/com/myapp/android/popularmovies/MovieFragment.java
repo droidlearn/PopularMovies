@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -20,22 +18,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -127,10 +110,6 @@ public class MovieFragment extends Fragment {
     }
 
 
-
-
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -206,8 +185,7 @@ public class MovieFragment extends Fragment {
             return;
         }
 
-        FetchMovieInfoTask movieInfoTask = new FetchMovieInfoTask();
-
+        FetchMovieInfoTask movieInfoTask = new FetchMovieInfoTask(getActivity(), mImageAdapter, gridView, movieInfos, mIsData);
 
         SharedPreferences sharedPrefs =
                 PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -220,269 +198,6 @@ public class MovieFragment extends Fragment {
 
 
         movieInfoTask.execute(mSortBy);
-    }
-
-
-
-
-    public class FetchMovieInfoTask extends AsyncTask<String, Void, ArrayList<MovieInfo>> {
-
-        private final String TAG = FetchMovieInfoTask.class.getSimpleName();
-
-
-        private ArrayList<MovieInfo> getMovieDataFromJson(String movieResponseJsonStr)
-                throws JSONException {
-
-
-            // These are the names of the JSON objects that need to be extracted.
-            //original title
-            //movie poster image thumbnail
-            //A plot synopsis (called overview in the api)
-            //user rating (called vote_average in the api)
-            //release date
-
-            final String TMD_id = "id";
-            final String TMD_results = "results";
-            final String TMD_original_title = "original_title";
-            final String TMD_poster_image = "poster_path";
-            final String TMD_plot_synopsis = "overview";
-            final String TMD_user_rating = "vote_average";
-            final String TMD_release_date = "release_date";
-            final String TMD_backdrop_path = "backdrop_path";
-            final String TMD_vote_count = "vote_count";
-
-
-            //Validate we have a valid Json String
-            if (!isValidJSON(movieResponseJsonStr))
-                return null;
-
-            JSONObject movieJson = new JSONObject(movieResponseJsonStr);
-
-
-            JSONArray resultsArray = movieJson.getJSONArray(TMD_results);
-
-            Log.d(TAG, "Movie info length = " + resultsArray.length());
-
-
-            for (int i = 0; i < resultsArray.length(); i++) {
-
-                JSONObject movieInfo = resultsArray.getJSONObject(i);
-
-                String NA = "Not Available";
-                String id = NA;
-                String original_title = NA;
-                String poster_image = NA;
-                String plot_synopsis = NA;
-                String user_rating = NA;
-                String release_date = NA;
-                String backdrop_path = NA;
-                String vote_count = NA;
-
-
-
-                if (null != movieInfo.getString(TMD_id) && ! JSONObject.NULL.equals(movieInfo.get(TMD_id)) )
-                    id = (String) movieInfo.getString(TMD_id);
-
-
-                if (null != movieInfo.get(TMD_original_title) && ! JSONObject.NULL.equals(movieInfo.get(TMD_original_title)))
-                    original_title = (String) movieInfo.get(TMD_original_title);
-
-                if (null != movieInfo.get(TMD_poster_image) && ! JSONObject.NULL.equals(movieInfo.get(TMD_poster_image)) )
-                    poster_image = (String) movieInfo.get(TMD_poster_image);
-
-                if (null != movieInfo.get(TMD_plot_synopsis) && ! JSONObject.NULL.equals(movieInfo.get(TMD_plot_synopsis)) )
-                    plot_synopsis = (String) movieInfo.get(TMD_plot_synopsis);
-
-                if (null != movieInfo.get(TMD_release_date) && ! JSONObject.NULL.equals(movieInfo.get(TMD_release_date)) ) {
-                    String dt = (String) movieInfo.get(TMD_release_date);
-                    DateFormat originalFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-                    DateFormat targetFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.ENGLISH);
-                    Date date = null;
-                    try {
-                        date = originalFormat.parse(dt);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    release_date = targetFormat.format(date);
-                }
-
-                if (null != movieInfo.get(TMD_backdrop_path) && ! JSONObject.NULL.equals(movieInfo.get(TMD_backdrop_path)) )
-                    backdrop_path = (String) movieInfo.get(TMD_backdrop_path);
-
-                if (null != movieInfo.get(TMD_user_rating) && ! JSONObject.NULL.equals(movieInfo.get(TMD_user_rating)) ) {
-                    Double user_rating_db = (Double) movieInfo.get(TMD_user_rating);
-
-                    if (null != movieInfo.get(TMD_vote_count) && ! JSONObject.NULL.equals(movieInfo.get(TMD_vote_count)) ) {
-                        Integer vc = movieInfo.getInt(TMD_vote_count);
-                        vote_count = vc.toString();
-                    }
-
-                    user_rating = Double.toString(user_rating_db) + " from " + vote_count + " reviews";
-
-                }
-
-
-                Log.d(TAG, "Movie Info for ****  id: (index) " + id + "(" + i + ")");
-                Log.d(TAG, "title  : " + original_title);
-                Log.d(TAG, "image  : " + poster_image);
-                Log.d(TAG, "plot   : " + plot_synopsis);
-                Log.d(TAG, "rating : " + user_rating);
-                Log.d(TAG, "release: " + release_date);
-
-
-
-
-
-
-
-
-                movieInfos.add(i, new MovieInfo(id, original_title, poster_image, plot_synopsis, user_rating, release_date, backdrop_path));
-            }
-
-            mIsData = true;
-            return movieInfos;
-        }
-
-
-        @Override
-        protected ArrayList<MovieInfo> doInBackground(String... params) {
-
-            // These two need to be declared outside the try/catch
-            // so that they can be closed in the finally block.
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-            // Will contain the raw JSON response as a string.
-            String popularMoviesStr = null;
-
-            try {
-                // Construct the URL for obtaining Popular Movies data query
-                // Possible parameters are avaiable at https://www.themoviedb.org/documentation/api/discover
-                // http://openweathermap.org/API#forecast
-                // By rating http://api.themoviedb.org/3/discover/movie?sort_by=vote_average.desc&api_key=011a293a33a5da37413bddc072d45e35
-                // By popularity http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=011a293a33a5da37413bddc072d45e35
-
-                final String MOVIE_BASE_URL = "http://api.themoviedb.org/3/discover/movie?primary_release_year=2015";
-                final String QUERY_PARAM = "sort_by";
-
-                // For future use
-                final String COUNTRY_PARAM = "certification_country";
-                final String RATINGS_PARAM = "certification";
-
-                //API key
-                final String API_KEY = "api_key";
-
-                //What are the highest rated movies rated R?
-                //URL: /discover/movie/?certification_country=US&certification=R&sort_by=vote_average.desc
-                //What are the most popular kids movies?
-                //URL: /discover/movie?certification_country=US&certification.lte=G&sort_by=popularity.desc
-
-
-                Uri builtUri = Uri.parse(MOVIE_BASE_URL).buildUpon()
-                        .appendQueryParameter(QUERY_PARAM, params[0])
-                        .appendQueryParameter(API_KEY, getString(R.string.API_DEV_KEY))
-                        .build();
-
-                Log.v(TAG, "Built URI=" + builtUri.toString());
-
-                URL url = new URL(builtUri.toString());
-
-                // Create the request to themoviedb, and open the connection
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                // Read the input stream into a String
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    // Nothing to do.
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                    // But it does make debugging a *lot* easier if you print out the completed
-                    // buffer for debugging.
-                    buffer.append(line + "\n");
-                }
-
-                if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
-                    return null;
-                }
-
-                popularMoviesStr = buffer.toString();
-                if (null != popularMoviesStr)
-                    Log.v(TAG, "Server response: " + popularMoviesStr);
-
-
-            } catch (IOException e) {
-                Log.e(TAG, "Error ", e);
-                // If the code didn't successfully get the Movie data, there's no point in attemping
-                // to parse it.
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(TAG, "Error closing stream", e);
-                    }
-                }
-            }
-
-            //Poster http://image.tmdb.org/t/p/w185//qARJ35IrJNFzFWQGcyWP4r1jyXE.jpg
-            //
-
-            try {
-                return getMovieDataFromJson(popularMoviesStr);
-            } catch (JSONException e) {
-                Log.e(TAG, e.getMessage(), e);
-                e.printStackTrace();
-            }
-
-            return null;
-
-        }
-
-        @Override
-        protected void onPostExecute(ArrayList<MovieInfo> result) {
-            Log.d(TAG, "onPostExecute called");
-            super.onPostExecute(result);
-            if (result != null) {
-                Log.d(TAG, "onPostExecute, clearing and re-init of adapter");
-                mImageAdapter.clear();
-                mImageAdapter.notifyDataSetChanged();
-                mImageAdapter = new ImageAdapter(getActivity().getApplicationContext(), result);
-                gridView.setAdapter(mImageAdapter);
-
-            }
-
-        }
-
-
-        private boolean isValidJSON(String jsonStr) {
-            try {
-
-                new JSONObject(jsonStr);
-            } catch (JSONException ex) {
-                try {
-                    new JSONArray(jsonStr);
-                } catch (JSONException exe) {
-                    return false;
-                }
-            }
-
-            return true;
-
-        }
-
     }
 
 

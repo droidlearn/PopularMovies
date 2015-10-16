@@ -50,7 +50,7 @@ public class MovieDBHelper extends SQLiteOpenHelper {
                 MovieEntry.COLUMN_POSTER_IMAGE + " TEXT , " +
                 MovieEntry.COLUMN_RELEASE_DATE + " TEXT , " +
                 MovieEntry.COLUMN_USER_RATING + " TEXT , " +
-                MovieEntry.COLUMN_PIVOT + " TEXT UNIQUE NOT NULL"  +
+                MovieEntry.COLUMN_PIVOT + " TEXT NOT NULL"  +
                 " );";
 
         final String SQL_CREATE_REVIEW_TABLE = "CREATE TABLE " + ReviewEntry.TABLE_NAME + " (" +
