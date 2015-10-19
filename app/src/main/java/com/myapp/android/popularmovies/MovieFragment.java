@@ -1,13 +1,17 @@
 package com.myapp.android.popularmovies;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -15,26 +19,29 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.GridView;
 
+import com.myapp.android.popularmovies.data.MovieContract;
+
 import java.util.ArrayList;
+
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MovieFragment extends Fragment {
+public class MovieFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
+
+    private static final int MOVIE_LOADER = 0;
 
     private final String TAG = MovieFragment.class.getSimpleName();
 
-    private ImageAdapter mImageAdapter;
+    private MovieCursorAdapter mCursorAdapter;
 
     private ArrayList<MovieInfo> movieInfos;
 
     private GridView gridView;
 
-    private String mSortBy = null;
 
     private boolean mIsData = false;
 
@@ -43,6 +50,35 @@ public class MovieFragment extends Fragment {
     public MovieFragment() {
         movieInfos = new ArrayList<MovieInfo>();
     }
+
+
+    private static final String[] MOVIE_COLUMNS = {
+
+            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
+            MovieContract.MovieEntry.COLUMN_MOVIE_KEY,
+            MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE,
+            MovieContract.MovieEntry.COLUMN_PIVOT,
+            MovieContract.MovieEntry.COLUMN_USER_RATING,
+            MovieContract.MovieEntry.COLUMN_BACKDROP_PATH,
+            MovieContract.MovieEntry.COLUMN_POSTER_IMAGE,
+            MovieContract.MovieEntry.COLUMN_PLOT_SYNOPSIS,
+            MovieContract.MovieEntry.COLUMN_RELEASE_DATE
+
+    };
+
+    // These indices are tied to FORECAST_COLUMNS.  If FORECAST_COLUMNS changes, these
+    // must change.
+    static final int COL_MOVIE_ID = 0;
+    static final int COL_MOVIE_KEY = 1;
+    static final int COL_MOVIE_ORIGINAL_TITLE = 2;
+    static final int COL_MOVIE_PIVOT = 3;
+    static final int COL_MOVIE_USER_RATING = 4;
+    static final int COL_MOVIE_BACKDROP_PATH = 5;
+    static final int COL_MOVIE_POSTER_IMAGE = 6;
+    static final int COL_MOVIE_PLOT_SYNOPSIS = 7;
+    static final int COL_MOVIE_RELEASE_DATE = 8;
+
+
 
 
     @Override
@@ -57,15 +93,17 @@ public class MovieFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate called");
+
         super.onCreate(savedInstanceState);
 
+        /*
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 
             mListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
 
-                /* When preferences change data needs to be re-fetched due to change in conditions */
+                // When preferences change data needs to be re-fetched due to change in conditions
                 mIsData = false;
 
             }
@@ -86,6 +124,7 @@ public class MovieFragment extends Fragment {
             mIsData = true;
         }
 
+        */
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
 
@@ -116,16 +155,29 @@ public class MovieFragment extends Fragment {
 
         Log.d(TAG, "onCreateView called");
 
+        /*
+        SharedPreferences sharedPrefs =
+                PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String pivot = sharedPrefs.getString(
+                getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_most_popular));
+
+        Uri moviesForPopularSettingUri = MovieContract.MovieEntry.buildMovieWithPopularSetting(pivot);
+        Cursor cur = getActivity().getContentResolver().query(MovieContract.MovieEntry.CONTENT_URI, null,
+                MovieContract.MovieEntry.COLUMN_PIVOT + " =?", new String[]{pivot}, null);
+        */
+
+        //mCursorAdapter = new MovieCursorAdapter(getActivity().getApplicationContext(), cur, 0);
+        mCursorAdapter = new MovieCursorAdapter(getActivity().getApplicationContext(), null, 0);
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
-        mImageAdapter = new ImageAdapter(getActivity().getApplicationContext(), movieInfos);
 
         // Get a reference to the GridView, and attach this adapter to it.
 
         gridView = (GridView) rootView.findViewById(R.id.gridview_movies_layout);
-        gridView.setAdapter(mImageAdapter);
+        gridView.setAdapter(mCursorAdapter);
 
+        /*
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 
@@ -149,6 +201,9 @@ public class MovieFragment extends Fragment {
 
         });
 
+        */
+
+
         return rootView;
     }
 
@@ -157,13 +212,15 @@ public class MovieFragment extends Fragment {
         Log.d(TAG, "onStart called");
 
         super.onStart();
-
+        /*
         // Fetch new data on preference change or when there is no data to begin with
         if (!mIsData) {
             movieInfos = new ArrayList<MovieInfo>();
             updateMovies();
 
         }
+        */
+        updateMovies();
 
     }
 
@@ -177,6 +234,15 @@ public class MovieFragment extends Fragment {
     }
 
 
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+
+
+
+
     private void updateMovies() {
 
         if (! isNetworkAvailable())
@@ -185,20 +251,50 @@ public class MovieFragment extends Fragment {
             return;
         }
 
-        FetchMovieInfoTask movieInfoTask = new FetchMovieInfoTask(getActivity(), mImageAdapter, gridView, movieInfos, mIsData);
-
+        FetchMovieInfoTask movieInfoTask = new FetchMovieInfoTask(getActivity());
         SharedPreferences sharedPrefs =
                 PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String sortby = sharedPrefs.getString(
+        String pivot = sharedPrefs.getString(
                 getString(R.string.pref_sort_key),
                 getString(R.string.pref_sort_most_popular));
 
-        Log.d(TAG, "Sort by = " + sortby);
-        mSortBy = sortby;
+        Log.d(TAG, "Sort by = " + pivot);
+        //mSortBy = pivot;
 
 
-        movieInfoTask.execute(mSortBy);
+        movieInfoTask.execute(pivot);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+
+        SharedPreferences sharedPrefs =
+                PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String pivot = sharedPrefs.getString(
+                getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_most_popular));
+
+
+        Uri moviesForSettingUri = MovieContract.MovieEntry.buildMovieWithSetting(pivot);
+
+
+        return new CursorLoader(getActivity(),
+                moviesForSettingUri,
+                MOVIE_COLUMNS,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+        mCursorAdapter.swapCursor(cursor);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> cursorLoader) {
+        mCursorAdapter.swapCursor(null);
     }
 
 
-    }
+}

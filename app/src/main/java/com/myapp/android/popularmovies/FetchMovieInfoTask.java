@@ -2,12 +2,9 @@ package com.myapp.android.popularmovies;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.GridView;
 
 import com.myapp.android.popularmovies.data.MovieContract;
 
@@ -24,37 +21,22 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
 
-
-public class FetchMovieInfoTask extends AsyncTask<String, Void, ArrayList<MovieInfo>> {
+public class FetchMovieInfoTask extends AsyncTask<String, Void, Void> {
 
     private final String TAG = FetchMovieInfoTask.class.getSimpleName();
 
     private final Context mContext;
-    private ImageAdapter mImageAdapter;
-    private GridView gridView;
-    private ArrayList<MovieInfo> movieInfos;
-    //private boolean mIsData;
-    private String pivot = "unknown";
 
-    public FetchMovieInfoTask(Context context, ImageAdapter imageAdapter, GridView gv, ArrayList<MovieInfo> mi, boolean isData) {
+    public FetchMovieInfoTask(Context context) {
         mContext = context;
-        mImageAdapter = imageAdapter;
-        gridView = gv;
-        movieInfos = mi;
-        //mIsData = isData;
+
     }
 
-
-
-    private ArrayList<MovieInfo> getMovieDataFromJson(String movieResponseJsonStr)
+    private void getMovieDataFromJson(String movieResponseJsonStr, String pivot)
             throws JSONException {
 
 
@@ -76,134 +58,145 @@ public class FetchMovieInfoTask extends AsyncTask<String, Void, ArrayList<MovieI
         final String TMD_vote_count = "vote_count";
 
 
-        //Validate we have a valid Json String
-        if (!isValidJSON(movieResponseJsonStr))
-            return null;
 
-        JSONObject movieJson = new JSONObject(movieResponseJsonStr);
+        try
+        {
+            //Validate we have a valid Json String
+            if (!isValidJSON(movieResponseJsonStr))
+                return;
 
-
-        JSONArray resultsArray = movieJson.getJSONArray(TMD_results);
-
-        Log.d(TAG, "Movie info length = " + resultsArray.length());
+            JSONObject movieJson = new JSONObject(movieResponseJsonStr);
 
 
-        // xxx Before adding a new movieInfo for a pivot, Delete existing movies for the pivot to update new data.
+            JSONArray resultsArray = movieJson.getJSONArray(TMD_results);
 
-        // Insert the new movie information into the database
-        Vector<ContentValues> cVVector = new Vector<ContentValues>(resultsArray.length());
-
-
-        for (int i = 0; i < resultsArray.length(); i++) {
-
-            JSONObject movieInfo = resultsArray.getJSONObject(i);
-
-            String NA = "Not Available";
-            String id = NA;
-            String original_title = NA;
-            String poster_image = NA;
-            String plot_synopsis = NA;
-            String user_rating = NA;
-            String release_date = NA;
-            String backdrop_path = NA;
-            String vote_count = NA;
+            Log.d(TAG, "Movie info length = " + resultsArray.length());
 
 
+            // xxx Before adding a new movieInfo for a pivot, Delete existing movies for the pivot to update new data.
 
-            if (null != movieInfo.getString(TMD_id) && ! JSONObject.NULL.equals(movieInfo.get(TMD_id)) )
-                id = (String) movieInfo.getString(TMD_id);
+            // Insert the new movie information into the database
+            Vector<ContentValues> cVVector = new Vector<ContentValues>(resultsArray.length());
 
 
-            if (null != movieInfo.get(TMD_original_title) && ! JSONObject.NULL.equals(movieInfo.get(TMD_original_title)))
-                original_title = (String) movieInfo.get(TMD_original_title);
+            for (int i = 0; i < resultsArray.length(); i++) {
 
-            if (null != movieInfo.get(TMD_poster_image) && ! JSONObject.NULL.equals(movieInfo.get(TMD_poster_image)) )
-                poster_image = (String) movieInfo.get(TMD_poster_image);
+                JSONObject movieInfo = resultsArray.getJSONObject(i);
 
-            if (null != movieInfo.get(TMD_plot_synopsis) && ! JSONObject.NULL.equals(movieInfo.get(TMD_plot_synopsis)) )
-                plot_synopsis = (String) movieInfo.get(TMD_plot_synopsis);
+                String NA = "Not Available";
+                String id = NA;
+                String original_title = NA;
+                String poster_image = NA;
+                String plot_synopsis = NA;
+                String user_rating = NA;
+                String release_date = NA;
+                String backdrop_path = NA;
+                String vote_count = NA;
 
-            if (null != movieInfo.get(TMD_release_date) && ! JSONObject.NULL.equals(movieInfo.get(TMD_release_date)) ) {
-                String dt = (String) movieInfo.get(TMD_release_date);
-                DateFormat originalFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-                DateFormat targetFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.ENGLISH);
-                Date date = null;
-                try {
-                    date = originalFormat.parse(dt);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                release_date = targetFormat.format(date);
-            }
 
-            if (null != movieInfo.get(TMD_backdrop_path) && ! JSONObject.NULL.equals(movieInfo.get(TMD_backdrop_path)) )
-                backdrop_path = (String) movieInfo.get(TMD_backdrop_path);
 
-            if (null != movieInfo.get(TMD_user_rating) && ! JSONObject.NULL.equals(movieInfo.get(TMD_user_rating)) ) {
-                Double user_rating_db = (Double) movieInfo.get(TMD_user_rating);
+                if (null != movieInfo.getString(TMD_id) && ! JSONObject.NULL.equals(movieInfo.get(TMD_id)) )
+                    id = (String) movieInfo.getString(TMD_id);
 
-                if (null != movieInfo.get(TMD_vote_count) && ! JSONObject.NULL.equals(movieInfo.get(TMD_vote_count)) ) {
-                    Integer vc = movieInfo.getInt(TMD_vote_count);
-                    vote_count = vc.toString();
+
+                if (null != movieInfo.get(TMD_original_title) && ! JSONObject.NULL.equals(movieInfo.get(TMD_original_title)))
+                    original_title = (String) movieInfo.get(TMD_original_title);
+
+                if (null != movieInfo.get(TMD_poster_image) && ! JSONObject.NULL.equals(movieInfo.get(TMD_poster_image)) )
+                    poster_image = (String) movieInfo.get(TMD_poster_image);
+
+                if (null != movieInfo.get(TMD_plot_synopsis) && ! JSONObject.NULL.equals(movieInfo.get(TMD_plot_synopsis)) )
+                    plot_synopsis = (String) movieInfo.get(TMD_plot_synopsis);
+
+                if (null != movieInfo.get(TMD_release_date) && ! JSONObject.NULL.equals(movieInfo.get(TMD_release_date)) ) {
+                    String dt = (String) movieInfo.get(TMD_release_date);
+                    DateFormat originalFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+                    DateFormat targetFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.ENGLISH);
+                    Date date = null;
+                    try {
+                        date = originalFormat.parse(dt);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    release_date = targetFormat.format(date);
                 }
 
-                user_rating = Double.toString(user_rating_db) + " from " + vote_count + " reviews";
+                if (null != movieInfo.get(TMD_backdrop_path) && ! JSONObject.NULL.equals(movieInfo.get(TMD_backdrop_path)) )
+                    backdrop_path = (String) movieInfo.get(TMD_backdrop_path);
+
+                if (null != movieInfo.get(TMD_user_rating) && ! JSONObject.NULL.equals(movieInfo.get(TMD_user_rating)) ) {
+                    Double user_rating_db = (Double) movieInfo.get(TMD_user_rating);
+
+                    if (null != movieInfo.get(TMD_vote_count) && ! JSONObject.NULL.equals(movieInfo.get(TMD_vote_count)) ) {
+                        Integer vc = movieInfo.getInt(TMD_vote_count);
+                        vote_count = vc.toString();
+                    }
+
+                    user_rating = Double.toString(user_rating_db) + " from " + vote_count + " reviews";
+
+                }
+
+
+                Log.d(TAG, "Movie Info for ****  id: (" + i + ")  = " + id);
+                Log.d(TAG, "title  : " + original_title);
+                Log.d(TAG, "image  : " + poster_image);
+                Log.d(TAG, "plot   : " + plot_synopsis);
+                Log.d(TAG, "rating : " + user_rating);
+                Log.d(TAG, "release: " + release_date);
+
+
+                ContentValues movieValues = new ContentValues();
+
+                movieValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_KEY, id);
+                movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, original_title);
+                movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_IMAGE, poster_image);
+                movieValues.put(MovieContract.MovieEntry.COLUMN_PLOT_SYNOPSIS, plot_synopsis);
+                movieValues.put(MovieContract.MovieEntry.COLUMN_USER_RATING, user_rating);
+                movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, release_date);
+                movieValues.put(MovieContract.MovieEntry.COLUMN_BACKDROP_PATH, backdrop_path);
+                movieValues.put(MovieContract.MovieEntry.COLUMN_PIVOT, pivot);
+
+                cVVector.add(movieValues);
+
+
+            }
+
+            // Delete old data before inserting new data
+            //mIsData = true;
+            if ( cVVector.size() > 0 ) {
+
+                int deleted = mContext.getContentResolver().delete(MovieContract.MovieEntry.CONTENT_URI, MovieContract.MovieEntry.COLUMN_PIVOT  + " = ?", new String[]{pivot});
+                Log.d(TAG, "FetchMovieTask deleted stale data. " + deleted + " deleted");
 
             }
 
 
-            Log.d(TAG, "Movie Info for ****  id: (" + i + ")  = " + id);
-            Log.d(TAG, "title  : " + original_title);
-            Log.d(TAG, "image  : " + poster_image);
-            Log.d(TAG, "plot   : " + plot_synopsis);
-            Log.d(TAG, "rating : " + user_rating);
-            Log.d(TAG, "release: " + release_date);
+
+            int inserted = 0;
+            // add to database
+            if ( cVVector.size() > 0 ) {
+                ContentValues[] cvArray = new ContentValues[cVVector.size()];
+                cVVector.toArray(cvArray);
+                inserted = mContext.getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
+
+            }
+
+            Log.d(TAG, "FetchMovieTask Complete. " + inserted + " Inserted");
 
 
-            ContentValues movieValues = new ContentValues();
-
-            movieValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_KEY, id);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, original_title);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_IMAGE, poster_image);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_PLOT_SYNOPSIS, plot_synopsis);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_USER_RATING, user_rating);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, release_date);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_BACKDROP_PATH, backdrop_path);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_PIVOT, pivot);
-
-            cVVector.add(movieValues);
-
-            //movieInfos.add(i, new MovieInfo(id, original_title, poster_image, plot_synopsis, user_rating, release_date, backdrop_path));
         }
-
-        // Delete old data before inserting new data
-        //mIsData = true;
-        if ( cVVector.size() > 0 ) {
-
-            int deleted = mContext.getContentResolver().delete(MovieContract.MovieEntry.CONTENT_URI, MovieContract.MovieEntry.COLUMN_PIVOT  + " = ?", new String[]{pivot});
-            Log.d(TAG, "FetchMovieTask deleted stale data. " + deleted + " deleted");
-
+        catch (JSONException e)
+        {
+            Log.e(TAG, e.getMessage(), e);
+            e.printStackTrace();
         }
 
 
-
-        int inserted = 0;
-        // add to database
-        if ( cVVector.size() > 0 ) {
-            ContentValues[] cvArray = new ContentValues[cVVector.size()];
-            cVVector.toArray(cvArray);
-            inserted = mContext.getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
-
-        }
-
-        Log.d(TAG, "FetchMovieTask Complete. " + inserted + " Inserted");
-
-        /* Debug code */
+        /* Debug code start
 
         //String sortOrder = MovieContract.MovieEntry.COLUMN_MOVIE_KEY + " ASC";
         Uri moviesForPopularSettingUri = MovieContract.MovieEntry.buildMovieWithPopularSetting(pivot);
 
-        //Cursor cur = mContext.getContentResolver().query(moviesForPopularSettingUri, null, null, null, null);
 
         Cursor cur = mContext.getContentResolver().query(MovieContract.MovieEntry.CONTENT_URI, null,
                 MovieContract.MovieEntry.COLUMN_PIVOT + " =?", new String[] {pivot}, null);
@@ -223,59 +216,17 @@ public class FetchMovieInfoTask extends AsyncTask<String, Void, ArrayList<MovieI
         Log.d(TAG, "FetchMovieTask Complete. " + cVVector.size() + " read");
 
 
-        //return movieInfos;
+        //return(convertContentValuesToMovieInfos(cVVector));
 
-        return(convertContentValuesToMovieInfos(cVVector));
-
-
-    }
-
-
-    private ArrayList<MovieInfo> convertContentValuesToMovieInfos(Vector<ContentValues> cvv)
-    {
-
-
-        ArrayList<MovieInfo> mis = new ArrayList<MovieInfo>(cvv.size());
-        for (int i = 0; i < cvv.size(); i++)
-        {
-            ContentValues movieValues = cvv.elementAt(i);
-
-            Set<Map.Entry<String, Object>> valueSet = movieValues.valueSet();
-
-            Map<String , String> movieColumnValues = new HashMap<String, String>();
-
-            for (Map.Entry<String, Object> entry : valueSet) {
-
-                String columnName = entry.getKey();
-                String columnValue = entry.getValue().toString();
-                Log.i(TAG, "##Col Name " + columnName);
-                Log.i(TAG, "##Col value " + columnValue);
-
-                movieColumnValues.put(columnName, columnValue);
-            }
-
-
-            mis.add(i, new MovieInfo(movieColumnValues.get(MovieContract.MovieEntry.COLUMN_MOVIE_KEY),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_POSTER_IMAGE),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_PLOT_SYNOPSIS),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_USER_RATING),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_RELEASE_DATE),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_BACKDROP_PATH)));
-
-
-
-        }
-
-
-
-        return mis;
+       Debug code end */
 
     }
+
+
 
 
     @Override
-    protected ArrayList<MovieInfo> doInBackground(String... params) {
+    protected Void doInBackground(String... params) {
 
         // These two need to be declared outside the try/catch
         // so that they can be closed in the finally block.
@@ -289,8 +240,8 @@ public class FetchMovieInfoTask extends AsyncTask<String, Void, ArrayList<MovieI
             // Construct the URL for obtaining Popular Movies data query
             // Possible parameters are avaiable at https://www.themoviedb.org/documentation/api/discover
             // http://openweathermap.org/API#forecast
-            // By rating http://api.themoviedb.org/3/discover/movie?sort_by=vote_average.desc&api_key=011a293a33a5da37413bddc072d45e35
-            // By popularity http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=011a293a33a5da37413bddc072d45e35
+            // By rating http://api.themoviedb.org/3/discover/movie?sort_by=vote_average.desc&api_key=12345678
+            // By popularity http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=12345678
 
             final String MOVIE_BASE_URL = "http://api.themoviedb.org/3/discover/movie?primary_release_year=2015";
             final String QUERY_PARAM = "sort_by";
@@ -306,8 +257,9 @@ public class FetchMovieInfoTask extends AsyncTask<String, Void, ArrayList<MovieI
             //URL: /discover/movie/?certification_country=US&certification=R&sort_by=vote_average.desc
             //What are the most popular kids movies?
             //URL: /discover/movie?certification_country=US&certification.lte=G&sort_by=popularity.desc
+            //Poster http://image.tmdb.org/t/p/w185//qARJ35IrJNFzFWQGcyWP4r1jyXE.jpg
 
-            pivot = params[0];
+            String pivot = params[0];
 
             Uri builtUri = Uri.parse(MOVIE_BASE_URL).buildUpon()
                     .appendQueryParameter(QUERY_PARAM, params[0])
@@ -349,13 +301,21 @@ public class FetchMovieInfoTask extends AsyncTask<String, Void, ArrayList<MovieI
             if (null != popularMoviesStr)
                 Log.v(TAG, "Server response: " + popularMoviesStr);
 
+            getMovieDataFromJson(popularMoviesStr, pivot);
 
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             Log.e(TAG, "Error ", e);
             // If the code didn't successfully get the Movie data, there's no point in attemping
             // to parse it.
-            return null;
-        } finally {
+
+        }
+        catch (JSONException e) {
+            Log.e(TAG, e.getMessage(), e);
+            e.printStackTrace();
+        }
+
+        finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
             }
@@ -368,35 +328,9 @@ public class FetchMovieInfoTask extends AsyncTask<String, Void, ArrayList<MovieI
             }
         }
 
-        //Poster http://image.tmdb.org/t/p/w185//qARJ35IrJNFzFWQGcyWP4r1jyXE.jpg
-        //
-
-        try {
-            return getMovieDataFromJson(popularMoviesStr);
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage(), e);
-            e.printStackTrace();
-        }
-
         return null;
 
     }
-
-    @Override
-    protected void onPostExecute(ArrayList<MovieInfo> result) {
-        Log.d(TAG, "onPostExecute called");
-        super.onPostExecute(result);
-        if (result != null) {
-            Log.d(TAG, "onPostExecute, clearing and re-init of adapter");
-            mImageAdapter.clear();
-            mImageAdapter.notifyDataSetChanged();
-            mImageAdapter = new ImageAdapter(mContext.getApplicationContext(), result);
-            gridView.setAdapter(mImageAdapter);
-
-        }
-
-    }
-
 
     private boolean isValidJSON(String jsonStr) {
         try {

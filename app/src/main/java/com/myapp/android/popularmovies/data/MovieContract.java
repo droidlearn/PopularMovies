@@ -83,6 +83,13 @@ public class MovieContract {
             return CONTENT_URI.buildUpon().appendPath(PopularSetting).build();
         }
 
+
+        public static Uri buildMovieWithSetting(String setting) {
+
+            return CONTENT_URI.buildUpon().appendPath(setting).build();
+
+        }
+
         public static Uri buildMovieWithMostRatedSetting(String MostRatedSetting) {
             return CONTENT_URI.buildUpon().appendPath(MostRatedSetting).build();
         }

@@ -40,6 +40,18 @@ public class MovieProvider extends ContentProvider {
     static final int TRAILER_BY_ID = 401;
 
 
+    private static final SQLiteQueryBuilder sMovieByTypeSettingQueryBuilder;
+
+    static{
+        sMovieByTypeSettingQueryBuilder = new SQLiteQueryBuilder();
+
+
+        sMovieByTypeSettingQueryBuilder.setTables(
+                MovieContract.MovieEntry.TABLE_NAME);
+    }
+
+
+
     private static final SQLiteQueryBuilder sMovieReviewByIDQueryBuilder;
 
     static{
@@ -78,7 +90,7 @@ public class MovieProvider extends ContentProvider {
         selection = sMovieByTypeSetting;
         selectionArgs = new String[]{typeSetting};
 
-        return sMovieReviewByIDQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+        return sMovieByTypeSettingQueryBuilder.query(mOpenHelper.getReadableDatabase(),
                 projection,
                 selection,
                 selectionArgs,
@@ -108,14 +120,6 @@ public class MovieProvider extends ContentProvider {
         );
     }
 
-
-
-
-
-
-
-
-
     /*
         Students: Here is where you need to create the UriMatcher. This UriMatcher will
         match each URI to the MOVIE, MOVIE_WITH_Review, MOVIE_WITH_Review_AND_DATE,
@@ -135,7 +139,7 @@ public class MovieProvider extends ContentProvider {
 
         // For each type of URI you want to add, create a corresponding code.
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/", MOVIE);
-        matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*/*", MOVIE_BY_TYPE);
+        matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*", MOVIE_BY_TYPE);
         matcher.addURI(authority, MovieContract.PATH_REVIEW + "/*", REVIEW_BY_ID);
         matcher.addURI(authority, MovieContract.PATH_TRAILER + "/*", TRAILER_BY_ID);
 
@@ -197,11 +201,13 @@ public class MovieProvider extends ContentProvider {
                 retCursor = getMovieByTypeSetting(uri, projection, sortOrder);
                 break;
             }
+            /*
             // "MOVIE/*"
             case MOVIE_BY_ID: {
                 retCursor = getMovieByTypeSettingAndID(uri, projection, sortOrder);
                 break;
             }
+            */
             // "MOVIE"
             case MOVIE: {
                 retCursor = mOpenHelper.getReadableDatabase().query(

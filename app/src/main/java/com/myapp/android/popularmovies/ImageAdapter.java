@@ -24,6 +24,7 @@ public class ImageAdapter extends BaseAdapter {
     private final String TAG = ImageAdapter.class.getSimpleName();
     private static LayoutInflater inflater = null;
 
+
     public ImageAdapter(Context c, ArrayList<MovieInfo> movieInfos) {
         mContext = c;
         mMovieInfo = movieInfos;
