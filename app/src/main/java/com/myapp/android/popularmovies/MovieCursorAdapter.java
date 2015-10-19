@@ -1,9 +1,7 @@
 package com.myapp.android.popularmovies;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.support.v4.widget.CursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,7 +13,6 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.Vector;
 
 /**
  * {@link MovieCursorAdapter} exposes a list of movies
@@ -74,19 +71,6 @@ public class MovieCursorAdapter extends CursorAdapter {
     public void bindView(View convertView, Context context, Cursor cur) {
         // our view is pretty simple here --- just a text view
         // we'll keep the UI functional with a simple (and slow!) binding.
-
-
-
-        Vector<ContentValues> cVVector = new Vector<ContentValues>(cur.getCount());
-        if (cur.moveToFirst())
-        {
-            do {
-                ContentValues cv = new ContentValues();
-                DatabaseUtils.cursorRowToContentValues(cur, cv);
-                cVVector.add(cv);
-            } while (cur.moveToNext());
-
-        }
 
 
         ArrayList<MovieInfo> mMovieInfo =  convertContentValuesToMovieInfos(cur);
