@@ -12,13 +12,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.myapp.android.popularmovies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -33,36 +29,27 @@ public class MovieCursorAdapter extends CursorAdapter {
     private final String TAG = MovieCursorAdapter.class.getSimpleName();
 
 
-    private ArrayList<MovieInfo> convertContentValuesToMovieInfos(Vector<ContentValues> cvv) {
+    private ArrayList<MovieInfo> convertContentValuesToMovieInfos(Cursor cur) {
 
 
-        ArrayList<MovieInfo> mis = new ArrayList<MovieInfo>(cvv.size());
-        for (int i = 0; i < cvv.size(); i++) {
-            ContentValues movieValues = cvv.elementAt(i);
+        ArrayList<MovieInfo> mis = new ArrayList<MovieInfo>(cur.getCount());
 
-            Set<Map.Entry<String, Object>> valueSet = movieValues.valueSet();
+        int i = 0;
 
-            Map<String, String> movieColumnValues = new HashMap<String, String>();
+        if (cur.moveToFirst())
+        {
+            do {
+                mis.add(i, new MovieInfo(cur.getString(MovieFragment.COL_MOVIE_KEY),
+                        cur.getString(MovieFragment.COL_MOVIE_ORIGINAL_TITLE),
+                        cur.getString(MovieFragment.COL_MOVIE_POSTER_IMAGE),
+                        cur.getString(MovieFragment.COL_MOVIE_PLOT_SYNOPSIS),
+                        cur.getString(MovieFragment.COL_MOVIE_USER_RATING),
+                        cur.getString(MovieFragment.COL_MOVIE_RELEASE_DATE),
+                        cur.getString(MovieFragment.COL_MOVIE_BACKDROP_PATH)));
 
-            for (Map.Entry<String, Object> entry : valueSet) {
+                i++;
 
-                String columnName = entry.getKey();
-                String columnValue = entry.getValue().toString();
-                Log.i(TAG, "##Col Name " + columnName);
-                Log.i(TAG, "##Col value " + columnValue);
-
-                movieColumnValues.put(columnName, columnValue);
-            }
-
-
-            mis.add(i, new MovieInfo(movieColumnValues.get(MovieContract.MovieEntry.COLUMN_MOVIE_KEY),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_POSTER_IMAGE),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_PLOT_SYNOPSIS),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_USER_RATING),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_RELEASE_DATE),
-                    movieColumnValues.get(MovieContract.MovieEntry.COLUMN_BACKDROP_PATH)));
-
+            } while (cur.moveToNext());
 
         }
 
@@ -102,7 +89,7 @@ public class MovieCursorAdapter extends CursorAdapter {
         }
 
 
-        ArrayList<MovieInfo> mMovieInfo =  convertContentValuesToMovieInfos(cVVector);
+        ArrayList<MovieInfo> mMovieInfo =  convertContentValuesToMovieInfos(cur);
 
 
         ImageView imageView;
