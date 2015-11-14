@@ -33,7 +33,7 @@ public class MovieProvider extends ContentProvider {
 
     static final int MOVIE = 100;
     static final int MOVIE_BY_TYPE = 101;
-    static final int MOVIE_BY_ID = 102;
+    static final int MOVIE_BY_TYPE_AND_ID = 102;
     static final int REVIEW = 300;
     static final int REVIEW_BY_ID = 301;
     static final int TRAILER  = 400;
@@ -107,10 +107,10 @@ public class MovieProvider extends ContentProvider {
         String[] selectionArgs;
         String selection;
 
-        selection = sMovieByTypeSetting;
+        selection = sMovieByTypeAndIDSelection;
         selectionArgs = new String[]{typeSetting, movieID};
 
-        return sMovieReviewByIDQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+        return sMovieByTypeSettingQueryBuilder.query(mOpenHelper.getReadableDatabase(),
                 projection,
                 selection,
                 selectionArgs,
@@ -140,6 +140,7 @@ public class MovieProvider extends ContentProvider {
         // For each type of URI you want to add, create a corresponding code.
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/", MOVIE);
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*", MOVIE_BY_TYPE);
+        matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*/*", MOVIE_BY_TYPE_AND_ID);
         matcher.addURI(authority, MovieContract.PATH_REVIEW + "/*", REVIEW_BY_ID);
         matcher.addURI(authority, MovieContract.PATH_TRAILER + "/*", TRAILER_BY_ID);
 
@@ -171,7 +172,7 @@ public class MovieProvider extends ContentProvider {
         switch (match) {
             case MOVIE_BY_TYPE:
                 return MovieContract.MovieEntry.CONTENT_TYPE;
-            case MOVIE_BY_ID:
+            case MOVIE_BY_TYPE_AND_ID:
                 return MovieContract.MovieEntry.CONTENT_ITEM_TYPE;
             case MOVIE:
                 return MovieContract.MovieEntry.CONTENT_TYPE;
@@ -201,13 +202,13 @@ public class MovieProvider extends ContentProvider {
                 retCursor = getMovieByTypeSetting(uri, projection, sortOrder);
                 break;
             }
-            /*
-            // "MOVIE/*"
-            case MOVIE_BY_ID: {
+
+            // "MOVIE/*/*"
+            case MOVIE_BY_TYPE_AND_ID: {
                 retCursor = getMovieByTypeSettingAndID(uri, projection, sortOrder);
                 break;
             }
-            */
+
             // "MOVIE"
             case MOVIE: {
                 retCursor = mOpenHelper.getReadableDatabase().query(

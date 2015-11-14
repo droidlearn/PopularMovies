@@ -19,12 +19,19 @@ import java.util.ArrayList;
  * from a {@link android.database.Cursor} to a {@link android.widget.ListView}.
  */
 public class MovieCursorAdapter extends CursorAdapter {
-    public MovieCursorAdapter(Context context, Cursor c, int flags) {
-        super(context, c, flags);
-    }
+
 
     private final String TAG = MovieCursorAdapter.class.getSimpleName();
+    private Cursor mCursor;
+    private int mPosition;
 
+
+    public MovieCursorAdapter(Context context, Cursor c, int flags) {
+
+        super(context, c, flags);
+        mCursor = c;
+
+    }
 
     private ArrayList<MovieInfo> convertContentValuesToMovieInfos(Cursor cur) {
 
@@ -54,6 +61,79 @@ public class MovieCursorAdapter extends CursorAdapter {
 
     }
 
+
+    public MovieInfo getCurItem(Cursor cur)
+    {
+        if (null != cur) {
+
+            if (cur.moveToPosition(mPosition)) {
+
+                return(new MovieInfo(cur.getString(MovieFragment.COL_MOVIE_KEY),
+                        cur.getString(MovieFragment.COL_MOVIE_ORIGINAL_TITLE),
+                        cur.getString(MovieFragment.COL_MOVIE_POSTER_IMAGE),
+                        cur.getString(MovieFragment.COL_MOVIE_PLOT_SYNOPSIS),
+                        cur.getString(MovieFragment.COL_MOVIE_USER_RATING),
+                        cur.getString(MovieFragment.COL_MOVIE_RELEASE_DATE),
+                        cur.getString(MovieFragment.COL_MOVIE_BACKDROP_PATH)));
+            }
+
+
+        }
+        return null;
+
+
+
+
+    }
+
+
+    /*
+    public MovieInfo getItem(int position)
+    {
+        if (null != mCursor) {
+
+            if (mCursor.moveToPosition(position)) {
+
+                return(new MovieInfo(mCursor.getString(MovieFragment.COL_MOVIE_KEY),
+                        mCursor.getString(MovieFragment.COL_MOVIE_ORIGINAL_TITLE),
+                        mCursor.getString(MovieFragment.COL_MOVIE_POSTER_IMAGE),
+                        mCursor.getString(MovieFragment.COL_MOVIE_PLOT_SYNOPSIS),
+                        mCursor.getString(MovieFragment.COL_MOVIE_USER_RATING),
+                        mCursor.getString(MovieFragment.COL_MOVIE_RELEASE_DATE),
+                        mCursor.getString(MovieFragment.COL_MOVIE_BACKDROP_PATH)));
+            }
+
+
+        }
+        return null;
+
+    }
+
+    */
+
+    /*
+
+    public long getItemId(int position) {
+
+        Log.i(TAG, "#####In getITemID = " + position);
+        mPosition = position;
+        return position;
+    }
+
+   */
+
+
+    /*
+    public int getCount() {
+        if (null != mCursor) {
+            Log.i(TAG, "#####Cur count" + mCursor.getCount());
+            return mCursor.getCount();
+        }
+        else
+            return 0;
+    }
+    */
+
     /*
         Remember that these views are reused as needed.
      */
@@ -73,8 +153,17 @@ public class MovieCursorAdapter extends CursorAdapter {
         // we'll keep the UI functional with a simple (and slow!) binding.
 
 
-        ArrayList<MovieInfo> mMovieInfo =  convertContentValuesToMovieInfos(cur);
+        //xxx ArrayList<MovieInfo> mMovieInfo =  convertContentValuesToMovieInfos(cur);
 
+        //MovieInfo mi = getCurItem(cur);
+
+        MovieInfo mi = new MovieInfo(cur.getString(MovieFragment.COL_MOVIE_KEY),
+                cur.getString(MovieFragment.COL_MOVIE_ORIGINAL_TITLE),
+                cur.getString(MovieFragment.COL_MOVIE_POSTER_IMAGE),
+                cur.getString(MovieFragment.COL_MOVIE_PLOT_SYNOPSIS),
+                cur.getString(MovieFragment.COL_MOVIE_USER_RATING),
+                cur.getString(MovieFragment.COL_MOVIE_RELEASE_DATE),
+                cur.getString(MovieFragment.COL_MOVIE_BACKDROP_PATH));
 
         ImageView imageView;
 
@@ -84,9 +173,8 @@ public class MovieCursorAdapter extends CursorAdapter {
         holder.tv=(TextView)  convertView.findViewById(R.id.custom_grid_textview);
         holder.iv=(ImageView) convertView.findViewById(R.id.custom_grid_imageview);
 
-        int position = 0;
 
-        if (null == mMovieInfo) {
+        if (null == mi) {
             Picasso.with(mContext)
                     //.load(mThumbIds[position])
                     .load(R.drawable.error)
@@ -99,8 +187,9 @@ public class MovieCursorAdapter extends CursorAdapter {
 
         else
         {
-           Log.v(TAG, "position = " + position);
-            String url = "http://image.tmdb.org/t/p/w185/" + (mMovieInfo.get(position)).poster_image;
+           //Log.v(TAG, "position = " + position);
+            String url = "http://image.tmdb.org/t/p/w185/" + mi.poster_image;
+            //String url = "http://image.tmdb.org/t/p/w185/" + cur.getString(MovieFragment.COL_MOVIE_POSTER_IMAGE);
             Log.v(TAG, "URL " + url);
             Picasso.with(mContext)
                     .load(url)
@@ -108,7 +197,8 @@ public class MovieCursorAdapter extends CursorAdapter {
                             //.noFade().resize(150, 150)
                             //.centerCrop()
                     .into(holder.iv);
-            holder.tv.setText((mMovieInfo.get(position)).original_title);
+            //holder.tv.setText(cur.getString(MovieFragment.COL_MOVIE_ORIGINAL_TITLE));
+            holder.tv.setText(mi.original_title);
         }
 
 

@@ -1,7 +1,9 @@
 package com.myapp.android.popularmovies;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -9,14 +11,27 @@ import android.view.MenuItem;
 
 public class MainActivity extends ActionBarActivity {
 
+    private final String LOG_TAG = MainActivity.class.getSimpleName();
+    private final String MOVIEFRAGMENT_TAG = "MFTAG";
+    private String mPivot;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        SharedPreferences sharedPrefs =
+                PreferenceManager.getDefaultSharedPreferences(this);
+        mPivot = sharedPrefs.getString(
+                getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_most_popular));
+
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new MovieFragment())
+                    .add(R.id.container, new MovieFragment(), MOVIEFRAGMENT_TAG)
                     .commit();
         }
 
@@ -39,6 +54,7 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
 
+
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
@@ -48,5 +64,27 @@ public class MainActivity extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        SharedPreferences sharedPrefs =
+                PreferenceManager.getDefaultSharedPreferences(this);
+        String pivot = sharedPrefs.getString(
+                getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_most_popular));
+
+        // update the pivot in our second pane using the fragment manager
+        if (pivot != null && !pivot.equals(mPivot)) {
+            MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentByTag(MOVIEFRAGMENT_TAG);
+            if ( null != mf ) {
+                mf.onPivotChanged();
+            }
+            mPivot = pivot;
+        }
+    }
+
+
 
 }

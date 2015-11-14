@@ -90,6 +90,15 @@ public class MovieContract {
 
         }
 
+        public static Uri buildMovieWithSettingByMovieId(String setting, String id) {
+
+            return CONTENT_URI.buildUpon().appendPath(setting).appendPath(id).build();
+
+        }
+
+
+
+
         public static Uri buildMovieWithMostRatedSetting(String MostRatedSetting) {
             return CONTENT_URI.buildUpon().appendPath(MostRatedSetting).build();
         }

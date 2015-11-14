@@ -1,6 +1,7 @@
 package com.myapp.android.popularmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -19,11 +20,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import com.myapp.android.popularmovies.data.MovieContract;
-
-import java.util.ArrayList;
 
 
 /**
@@ -38,7 +39,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     private MovieCursorAdapter mCursorAdapter;
 
-    private ArrayList<MovieInfo> movieInfos;
+    //private ArrayList<MovieInfo> movieInfos;
 
     private GridView gridView;
 
@@ -48,7 +49,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
     private SharedPreferences.OnSharedPreferenceChangeListener mListener = null;
 
     public MovieFragment() {
-        movieInfos = new ArrayList<MovieInfo>();
+        //movieInfos = new ArrayList<MovieInfo>();
     }
 
 
@@ -66,8 +67,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     };
 
-    // These indices are tied to FORECAST_COLUMNS.  If FORECAST_COLUMNS changes, these
-    // must change.
+
     static final int COL_MOVIE_ID = 0;
     static final int COL_MOVIE_KEY = 1;
     static final int COL_MOVIE_ORIGINAL_TITLE = 2;
@@ -85,7 +85,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
     public void onSaveInstanceState(Bundle outState) {
         Log.d(TAG, "onSaveInstanceState called");
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList("movies", movieInfos);
+       // outState.putParcelableArrayList("movies", movieInfos);
 
     }
 
@@ -95,8 +95,10 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
         Log.d(TAG, "onCreate called");
 
         super.onCreate(savedInstanceState);
+        //setRetainInstance(true);
 
         /*
+
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 
@@ -125,6 +127,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
         }
 
         */
+
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
 
@@ -145,6 +148,12 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
+        // xxx Just added from ForecastFragment.xml and also added the button to menu movie_fragment.xml
+        if (id == R.id.action_refresh) {
+            updateMovies();
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -162,12 +171,14 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
                 getString(R.string.pref_sort_key),
                 getString(R.string.pref_sort_most_popular));
 
-        Uri moviesForPopularSettingUri = MovieContract.MovieEntry.buildMovieWithPopularSetting(pivot);
+        Uri moviesWithSettingUri = MovieContract.MovieEntry.buildMovieWithSetting(pivot);
         Cursor cur = getActivity().getContentResolver().query(MovieContract.MovieEntry.CONTENT_URI, null,
                 MovieContract.MovieEntry.COLUMN_PIVOT + " =?", new String[]{pivot}, null);
+
+
+        mCursorAdapter = new MovieCursorAdapter(getActivity().getApplicationContext(), cur, 0);
         */
 
-        //mCursorAdapter = new MovieCursorAdapter(getActivity().getApplicationContext(), cur, 0);
         mCursorAdapter = new MovieCursorAdapter(getActivity().getApplicationContext(), null, 0);
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
@@ -177,53 +188,86 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
         gridView = (GridView) rootView.findViewById(R.id.gridview_movies_layout);
         gridView.setAdapter(mCursorAdapter);
 
-        /*
+
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                MovieInfo mi = mImageAdapter.getItem(position);
-
-                //Context context = getActivity().getApplicationContext();
-                //Toast.makeText(context, "" + position + mi.original_title,
-                //      Toast.LENGTH_SHORT).show();
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
 
 
-                MovieInfo mip = new MovieInfo(mi.id, mi.original_title, mi.poster_image, mi.plot_synopsis, mi.user_rating, mi.release_date, mi.backdrop_path);
+                Context context = getActivity().getApplicationContext();
+                Toast.makeText(context, "" + position ,
+                              Toast.LENGTH_SHORT).show();
 
-                Intent intent = new Intent(getActivity(), DetailActivity.class);
-                intent.putExtra("com.myapp.android.popularmovies.SelectedMovie", mip);
 
-                startActivity(intent);
+                Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
+
+                if (cursor != null) {
+                    SharedPreferences sharedPrefs =
+                            PreferenceManager.getDefaultSharedPreferences(getActivity());
+                    String pivot = sharedPrefs.getString(
+                            getString(R.string.pref_sort_key),
+                            getString(R.string.pref_sort_most_popular));
+
+
+                    Intent intent = new Intent(getActivity(), DetailActivity.class);
+
+                    Uri moviesForSettingAndMovieIDUri =
+                            MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
+                                    cursor.getString(COL_MOVIE_KEY));
+
+
+                    intent.putExtra("com.myapp.android.popularmovies.SelectedMovie", moviesForSettingAndMovieIDUri);
+
+/*
+                    Intent intent = new Intent(getActivity(), DetailActivity.class)
+                            .setData(MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
+                                            cursor.getString(COL_MOVIE_KEY)
+                            ));
+
+*/
+                    startActivity(intent);
+
+                }
+                else
+                {
+
+                    Log.v(TAG, "Detail Cursor is null");
+                }
+
             }
-
 
         });
 
-        */
+
 
 
         return rootView;
     }
 
+
+    /* xxx Handle settings change 5
     @Override
     public void onStart() {
         Log.d(TAG, "onStart called");
 
-        super.onStart();
-        /*
-        // Fetch new data on preference change or when there is no data to begin with
-        if (!mIsData) {
-            movieInfos = new ArrayList<MovieInfo>();
-            updateMovies();
 
-        }
-        */
+        super.onStart();
+
+
+        // Fetch new data on preference change or when there is no data to begin with
+        //if (!mIsData) {
+            //movieInfos = new ArrayList<MovieInfo>();
+            //updateMovies();
+
+        //}
+
+
+
         updateMovies();
 
     }
-
+    */
 
     //Based on a stackoverflow snippet
     private boolean isNetworkAvailable() {
@@ -241,6 +285,11 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
     }
 
 
+    // since we read the pivot when we create the loader, all we need to do is restart things
+    void onPivotChanged() {
+        updateMovies();
+        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+    }
 
 
     private void updateMovies() {
