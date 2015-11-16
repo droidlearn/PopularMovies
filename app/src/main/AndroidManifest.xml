@@ -38,7 +38,16 @@
         </activity>
         <provider
                 android:authorities="com.myapp.android.popularmovies"
-                android:name=".data.MovieProvider" />
+                android:name=".data.MovieProvider"
+                android:enabled="true"
+                android:exported="true"
+                android:permission="com.myapp.android.popularmovies.LICENSE_TO_API"/>
     </application>
+
+    <perission>
+        android:name="com.myapp.android.popularmovies.LICENSE_TO_API"
+        android:protetctionLevel="dangerous"
+        android:label="LICENSE_TO_API"
+    </perission>
 
 </manifest>
