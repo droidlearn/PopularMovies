@@ -58,12 +58,13 @@ public class MovieDBHelper extends SQLiteOpenHelper {
 
                 // the ID of the movie entry associated with movie data
 
-                ReviewEntry.COLUMN_MOVIE_KEY + " TEXT  NOT NULL, " +
-                ReviewEntry.COLUMN_REVIEW_ID + " TEXT NOT NULL, " +
-                ReviewEntry.COLUMN_REVIEW_STR + " TEXT, " +   //null data possible
+                ReviewEntry.COLUMN_MOVIE_ID + " INTEGER  NOT NULL, " +
+                ReviewEntry.COLUMN_AUTHOR + " TEXT NOT NULL" +
+                ReviewEntry.COLUMN_REVIEW_STR + " TEXT, NOT NULL" +
+                ReviewEntry.COLUMN_INDEX + " INTEGER NOT NULL" +
 
 
-                " FOREIGN KEY (" + ReviewEntry.COLUMN_MOVIE_KEY + ") REFERENCES " +
+                " FOREIGN KEY (" + ReviewEntry.COLUMN_MOVIE_ID + ") REFERENCES " +
                 MovieEntry.TABLE_NAME + " (" + MovieEntry._ID + ") " +
                 ");";
 
@@ -72,12 +73,12 @@ public class MovieDBHelper extends SQLiteOpenHelper {
                 TrailerEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
 
                 // the ID of the trailer entry associated with movie data
-                TrailerEntry.COLUMN_MOVIE_KEY + " TEXT  NOT NULL, " +
-                TrailerEntry.COLUMN_TRAILER_ID + " TEXT NOT NULL, " +
-                TrailerEntry.COLUMN_TRAILER_URL + " TEXT, " +   //null data possible
+                TrailerEntry.COLUMN_MOVIE_ID + " INTEGER  NOT NULL, " +
+                TrailerEntry.COLUMN_NAME + " TEXT NOT NULL, " +
+                TrailerEntry.COLUMN_KEY + " TEXT NOT NULL, " +
 
                 // Set up the location column as a foreign key to Review table.
-                " FOREIGN KEY (" + TrailerEntry.COLUMN_MOVIE_KEY + ") REFERENCES " +
+                " FOREIGN KEY (" + TrailerEntry.COLUMN_MOVIE_ID + ") REFERENCES " +
                 TrailerEntry.TABLE_NAME + " (" + MovieEntry._ID + ") " +
                 ");";
 

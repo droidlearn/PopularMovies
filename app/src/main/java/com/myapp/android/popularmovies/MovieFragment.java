@@ -1,7 +1,6 @@
 package com.myapp.android.popularmovies;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -46,6 +45,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     private boolean mIsData = false;
 
+    private int mPosition;
     private SharedPreferences.OnSharedPreferenceChangeListener mListener = null;
 
     public MovieFragment() {
@@ -210,23 +210,32 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
                             getString(R.string.pref_sort_most_popular));
 
 
-                    Intent intent = new Intent(getActivity(), DetailActivity.class);
+                    //Intent intent = new Intent(getActivity(), DetailActivity.class);
 
-                    Uri moviesForSettingAndMovieIDUri =
-                            MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
-                                    cursor.getString(COL_MOVIE_KEY));
+                    //Uri moviesForSettingAndMovieIDUri =
+                    //        MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
+                    //                cursor.getString(COL_MOVIE_KEY));
 
 
-                    intent.putExtra("com.myapp.android.popularmovies.SelectedMovie", moviesForSettingAndMovieIDUri);
+                    //intent.putExtra("com.myapp.android.popularmovies.SelectedMovie", moviesForSettingAndMovieIDUri);
 
-/*
+                    /*
                     Intent intent = new Intent(getActivity(), DetailActivity.class)
                             .setData(MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
                                             cursor.getString(COL_MOVIE_KEY)
                             ));
 
-*/
+
                     startActivity(intent);
+
+                    */
+
+                    ((Callback)getActivity()).onItemSelected(MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
+                            cursor.getString(COL_MOVIE_KEY)));
+
+                    //mPosition = position;
+
+
 
                 }
                 else
@@ -243,6 +252,19 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
 
         return rootView;
+    }
+
+
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        public void onItemSelected(Uri movieUri);
     }
 
 

@@ -133,11 +133,13 @@ public class MovieContract {
         // Table name
         public static final String TABLE_NAME = "review";
 
-        public static final String COLUMN_MOVIE_KEY = "movie_key";
+        public static final String COLUMN_MOVIE_ID = "movie_id";
 
-        public static final String COLUMN_REVIEW_ID = "review_id";
+        public static final String COLUMN_AUTHOR = "author";
 
         public static final String COLUMN_REVIEW_STR = "review_str";
+
+        public static final String COLUMN_INDEX = "review_idx";
 
         public static Uri buildReviewUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
@@ -158,11 +160,11 @@ public class MovieContract {
         // Table name
         public static final String TABLE_NAME = "trailer";
 
-        public static final String COLUMN_MOVIE_KEY = "movie_key";
+        public static final String COLUMN_MOVIE_ID = "movie_id";
 
-        public static final String COLUMN_TRAILER_ID = "trailer_id";
+        public static final String COLUMN_NAME = "name";
 
-        public static final String COLUMN_TRAILER_URL = "trailer_url";
+        public static final String COLUMN_KEY = "key";
 
         public static Uri buildTrailerUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);

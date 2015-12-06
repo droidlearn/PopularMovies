@@ -38,6 +38,10 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     private static final int DETAIL_LOADER = 0;
     private MovieInfo mi = null;
 
+    private Uri mUri;
+    static final String DETAIL_URI = "URI";
+
+    private String mMovie;
 
     private static final String[] MOVIE_COLUMNS = {
 
@@ -81,18 +85,26 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+
+        Bundle arguments = getArguments();
+        if (arguments != null)
+        {
+            mUri  = arguments.getParcelable(DetailFragment.DETAIL_URI);
+
+        }
+
+
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
 
         // The detail Activity called via intent.  Inspect the intent for forecast data.
-        Intent intent = getActivity().getIntent();
+        //Intent intent = getActivity().getIntent();
+       // if (intent != null)
+       // {
 
-        if (intent != null)
-        {
-
-            Log.v(LOG_TAG, "Extracting Uri from Intent");
-            Uri mi = intent.getParcelableExtra("com.myapp.android.popularmovies.SelectedMovie");
-
+       //     Log.v(LOG_TAG, "Extracting Uri from Intent");
+            //Uri mi = intent.getParcelableExtra("com.myapp.android.popularmovies.SelectedMovie");
 
             //Context mContext = getActivity().getApplicationContext();
             //Toast.makeText(mContext, "" + mi.original_title,
@@ -107,9 +119,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             user_rating = (TextView) rootView.findViewById(R.id.user_rating);
             backdrop = (ImageView) rootView.findViewById(R.id.backdrop);
 
-        }
-
-        return rootView;
+        //}
+         return rootView;
     }
 
 
@@ -117,6 +128,20 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     public void onActivityCreated(Bundle savedInstanceState) {
         getLoaderManager().initLoader(DETAIL_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
+    }
+
+
+    void onPivotChanged(String newPivot) {
+
+        Uri uri = mUri;
+        if (null != uri) {
+
+            Uri updateUri  = MovieContract.MovieEntry.buildMovieWithSetting(newPivot);
+            mUri = updateUri;
+            getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
+
+        }
+
     }
 
 
@@ -148,24 +173,23 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Log.v(LOG_TAG, "In onCreateLoader");
 
-        Intent intent = getActivity().getIntent();
-        if (intent == null) {
-            return null;
+        if (null != mUri) {
+
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    //intent.getData(),
+                    mUri,
+                    MOVIE_COLUMNS,
+                    null,
+                    null,
+                    null
+            );
+
         }
 
-        Uri muri = intent.getParcelableExtra("com.myapp.android.popularmovies.SelectedMovie");
-
-        // Now create and return a CursorLoader that will take care of
-        // creating a Cursor for the data being displayed.
-        return new CursorLoader(
-                getActivity(),
-                //intent.getData(),
-                muri,
-                MOVIE_COLUMNS,
-                null,
-                null,
-                null
-        );
+        return null;
     }
 
 
@@ -206,6 +230,10 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             plot.setText(mi.plot_synopsis);
             user_rating.setText(mi.user_rating);
             release_date.setText(mi.release_date);
+
+            mMovie = String.format("%s - %s - %s - %s", mi.original_title, mi.user_rating, mi.plot_synopsis, mi.release_date);
+
+
         }
 
         //If onCreateOptionsMenu has already happened, we need to update the share intent now.
@@ -230,7 +258,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_TEXT,
-                "" + TAG);
+                mMovie + TAG);
         return shareIntent;
     }
 

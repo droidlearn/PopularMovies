@@ -34,10 +34,9 @@ public class MovieProvider extends ContentProvider {
     static final int MOVIE = 100;
     static final int MOVIE_BY_TYPE = 101;
     static final int MOVIE_BY_TYPE_AND_ID = 102;
-    static final int REVIEW = 300;
-    static final int REVIEW_BY_ID = 301;
-    static final int TRAILER  = 400;
-    static final int TRAILER_BY_ID = 401;
+    static final int REVIEW_LIST = 300;
+    static final int TRAILER_LIST  = 400;
+
 
 
     private static final SQLiteQueryBuilder sMovieByTypeSettingQueryBuilder;
@@ -141,8 +140,8 @@ public class MovieProvider extends ContentProvider {
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/", MOVIE);
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*", MOVIE_BY_TYPE);
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*/*", MOVIE_BY_TYPE_AND_ID);
-        matcher.addURI(authority, MovieContract.PATH_REVIEW + "/*", REVIEW_BY_ID);
-        matcher.addURI(authority, MovieContract.PATH_TRAILER + "/*", TRAILER_BY_ID);
+        matcher.addURI(authority, MovieContract.PATH_REVIEW + "/", REVIEW_LIST);
+        matcher.addURI(authority, MovieContract.PATH_TRAILER + "/", TRAILER_LIST);
 
 
         return matcher;
@@ -176,14 +175,10 @@ public class MovieProvider extends ContentProvider {
                 return MovieContract.MovieEntry.CONTENT_ITEM_TYPE;
             case MOVIE:
                 return MovieContract.MovieEntry.CONTENT_TYPE;
-            case REVIEW:
+            case REVIEW_LIST:
                 return MovieContract.ReviewEntry.CONTENT_TYPE;
-            case TRAILER:
+            case TRAILER_LIST:
                 return MovieContract.TrailerEntry.CONTENT_TYPE;
-            case REVIEW_BY_ID:
-                return MovieContract.ReviewEntry.CONTENT_ITEM_TYPE;
-            case TRAILER_BY_ID:
-                return MovieContract.TrailerEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -223,7 +218,7 @@ public class MovieProvider extends ContentProvider {
                 break;
             }
             // "Review"
-            case REVIEW_BY_ID: {
+            case REVIEW_LIST: {
                 retCursor = mOpenHelper.getReadableDatabase().query(
                         MovieContract.ReviewEntry.TABLE_NAME,
                         projection,
@@ -235,8 +230,8 @@ public class MovieProvider extends ContentProvider {
                 );
                 break;
             }
-            // "TRAILER_BY_ID"
-            case TRAILER_BY_ID: {
+            // "TRAILER"
+            case TRAILER_LIST: {
                 retCursor = mOpenHelper.getReadableDatabase().query(
                         MovieContract.TrailerEntry.TABLE_NAME,
                         projection,
@@ -276,7 +271,7 @@ public class MovieProvider extends ContentProvider {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 break;
             }
-            case REVIEW: {
+            case REVIEW_LIST: {
                 long _id = db.insert(MovieContract.ReviewEntry.TABLE_NAME, null, values);
                 if ( _id > 0 )
                     returnUri = MovieContract.ReviewEntry.buildReviewUri(_id);
@@ -284,7 +279,7 @@ public class MovieProvider extends ContentProvider {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 break;
             }
-            case TRAILER: {
+            case TRAILER_LIST: {
                 long _id = db.insert(MovieContract.TrailerEntry.TABLE_NAME, null, values);
                 if ( _id > 0 )
                     returnUri = MovieContract.TrailerEntry.buildTrailerUri(_id);
@@ -314,11 +309,11 @@ public class MovieProvider extends ContentProvider {
                 rowsDeleted = db.delete(
                         MovieContract.MovieEntry.TABLE_NAME, selection, selectionArgs);
                 break;
-            case REVIEW:
+            case REVIEW_LIST:
                 rowsDeleted = db.delete(
                         MovieContract.ReviewEntry.TABLE_NAME, selection, selectionArgs);
                 break;
-            case TRAILER:
+            case TRAILER_LIST:
                 rowsDeleted = db.delete(
                         MovieContract.TrailerEntry.TABLE_NAME, selection, selectionArgs);
                 break;
@@ -345,11 +340,11 @@ public class MovieProvider extends ContentProvider {
                 rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
-            case REVIEW:
+            case REVIEW_LIST:
                 rowsUpdated = db.update(MovieContract.ReviewEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
-            case TRAILER:
+            case TRAILER_LIST:
                 rowsUpdated = db.update(MovieContract.TrailerEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
@@ -366,10 +361,10 @@ public class MovieProvider extends ContentProvider {
     public int bulkInsert(Uri uri, ContentValues[] values) {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
+        int returnCount = 0;
         switch (match) {
             case MOVIE:
                 db.beginTransaction();
-                int returnCount = 0;
                 try {
                     for (ContentValues value : values) {
                         long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, value);
@@ -383,6 +378,22 @@ public class MovieProvider extends ContentProvider {
                 }
                 getContext().getContentResolver().notifyChange(uri, null);
                 return returnCount;
+            case REVIEW_LIST:
+                db.beginTransaction();
+                try {
+                    for (ContentValues value : values) {
+                        long _id = db.insert(MovieContract.ReviewEntry.TABLE_NAME, null, value);
+                        if (_id != -1) {
+                            returnCount++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                getContext().getContentResolver().notifyChange(uri, null);
+                return returnCount;
+
             default:
                 return super.bulkInsert(uri, values);
         }
