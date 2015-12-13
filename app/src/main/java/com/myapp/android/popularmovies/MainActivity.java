@@ -131,7 +131,12 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
     }
 
 
+    public boolean isLayoutTwoPane()
+    {
 
+        return mTwoPane;
+
+    }
 
 }
 

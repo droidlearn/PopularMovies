@@ -24,11 +24,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.text.TextUtils;
 
 public class MovieProvider extends ContentProvider {
 
     // The URI Matcher used by this content provider.
-    private static final UriMatcher sUriMatcher = buildUriMatcher();
+    public static final UriMatcher sUriMatcher = buildUriMatcher();
     private MovieDBHelper mOpenHelper;
 
     static final int MOVIE = 100;
@@ -36,7 +37,10 @@ public class MovieProvider extends ContentProvider {
     static final int MOVIE_BY_TYPE_AND_ID = 102;
     static final int REVIEW_LIST = 300;
     static final int TRAILER_LIST  = 400;
-
+    public static final int FAVORITE = 500;
+    public static final int FAVORITE_LIST = 501;
+    public static final String QUERY_PARAMETER_LIMIT = "limit";
+    public static final String QUERY_PARAMETER_OFFSET = "offset";
 
 
     private static final SQLiteQueryBuilder sMovieByTypeSettingQueryBuilder;
@@ -48,6 +52,18 @@ public class MovieProvider extends ContentProvider {
         sMovieByTypeSettingQueryBuilder.setTables(
                 MovieContract.MovieEntry.TABLE_NAME);
     }
+
+
+    private static final SQLiteQueryBuilder sFavoriteMovieByTypeSettingQueryBuilder;
+
+    static{
+        sFavoriteMovieByTypeSettingQueryBuilder = new SQLiteQueryBuilder();
+
+
+        sFavoriteMovieByTypeSettingQueryBuilder.setTables(
+                MovieContract.FavoriteEntry.TABLE_NAME);
+    }
+
 
 
 
@@ -119,6 +135,56 @@ public class MovieProvider extends ContentProvider {
         );
     }
 
+    //movie.column_pivot = ?
+    private static final String sFavoriteMovieByTypeSetting =
+            MovieContract.FavoriteEntry.TABLE_NAME+
+                    "." + MovieContract.FavoriteEntry.COLUMN_PIVOT + " = ? ";
+
+
+
+    private Cursor getFavoriteMovieByTypeSetting(Uri uri, String[] projection, String sortOrder) {
+        String typeSetting = MovieContract.FavoriteEntry.getTypeSettingFromUri(uri);
+
+        String[] selectionArgs;
+        String selection;
+
+        selection = sFavoriteMovieByTypeSetting;
+        selectionArgs = new String[]{typeSetting};
+
+        return sFavoriteMovieByTypeSettingQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+    }
+
+
+    private Cursor getFavoriteMovieByTypeSettingAndID(Uri uri, String[] projection, String sortOrder) {
+        String typeSetting = MovieContract.FavoriteEntry.getTypeSettingFromUri(uri);
+        String movieID = MovieContract.FavoriteEntry.getMovieIDSettingFromUri(uri);
+
+        String[] selectionArgs;
+        String selection;
+
+        selection = sMovieByTypeAndIDSelection;
+        selectionArgs = new String[]{typeSetting, movieID};
+
+        return sMovieByTypeSettingQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+    }
+
+
+
+
     /*
         Students: Here is where you need to create the UriMatcher. This UriMatcher will
         match each URI to the MOVIE, MOVIE_WITH_Review, MOVIE_WITH_Review_AND_DATE,
@@ -142,6 +208,9 @@ public class MovieProvider extends ContentProvider {
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*/*", MOVIE_BY_TYPE_AND_ID);
         matcher.addURI(authority, MovieContract.PATH_REVIEW + "/", REVIEW_LIST);
         matcher.addURI(authority, MovieContract.PATH_TRAILER + "/", TRAILER_LIST);
+        matcher.addURI(authority, MovieContract.PATH_FAVORITE + "/*", FAVORITE);
+        matcher.addURI(authority, MovieContract.PATH_FAVORITE + "/", FAVORITE_LIST);
+
 
 
         return matcher;
@@ -179,6 +248,10 @@ public class MovieProvider extends ContentProvider {
                 return MovieContract.ReviewEntry.CONTENT_TYPE;
             case TRAILER_LIST:
                 return MovieContract.TrailerEntry.CONTENT_TYPE;
+            case FAVORITE:
+                return MovieContract.FavoriteEntry.CONTENT_ITEM_TYPE;
+            case FAVORITE_LIST:
+                return MovieContract.FavoriteEntry.CONTENT_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -242,9 +315,39 @@ public class MovieProvider extends ContentProvider {
                         sortOrder
                 );
                 break;
+            }
 
+            // "FAVORITE"
+            case FAVORITE: {
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        MovieContract.FavoriteEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
 
             }
+
+
+            // "FAVORITE_LIST"
+            case FAVORITE_LIST: {
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                            MovieContract.FavoriteEntry.TABLE_NAME,
+                            projection,
+                            selection,
+                            selectionArgs,
+                            null,
+                            null,
+                            sortOrder
+                );
+                break;
+            }
+
+
 
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
@@ -288,6 +391,18 @@ public class MovieProvider extends ContentProvider {
                 break;
             }
 
+
+            case FAVORITE_LIST: {
+                String id = values.getAsString("id");
+                String sql = "INSERT INTO " + MovieContract.FavoriteEntry.TABLE_NAME + " SELECT * FROM " + MovieContract.MovieEntry.TABLE_NAME + " WHERE " + MovieContract.MovieEntry.COLUMN_MOVIE_KEY+ " = " + id;
+                db.execSQL(sql);
+
+                returnUri = MovieContract.FavoriteEntry.buildFavoriteUri(Long.parseLong(id));
+                break;
+            }
+
+
+
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
 
@@ -302,6 +417,10 @@ public class MovieProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int rowsDeleted;
+        String id;
+        String where;
+
+
         // this makes delete all rows return the number of rows deleted
         if ( null == selection ) selection = "1";
         switch (match) {
@@ -317,6 +436,26 @@ public class MovieProvider extends ContentProvider {
                 rowsDeleted = db.delete(
                         MovieContract.TrailerEntry.TABLE_NAME, selection, selectionArgs);
                 break;
+
+            case FAVORITE:
+
+                id = uri.getLastPathSegment();
+                where = MovieContract.FavoriteEntry.COLUMN_MOVIE_KEY+ " = " + id;
+                if (!TextUtils.isEmpty(selection)) {
+                    where += " AND " + selection;
+                }
+                rowsDeleted = db.delete(
+                        MovieContract.FavoriteEntry.TABLE_NAME,
+                        where,
+                        selectionArgs);
+                break;
+
+
+            case FAVORITE_LIST:
+                rowsDeleted = db.delete(
+                        MovieContract.FavoriteEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }

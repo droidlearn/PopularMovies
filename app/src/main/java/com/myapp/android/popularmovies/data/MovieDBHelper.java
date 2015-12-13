@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.myapp.android.popularmovies.data.MovieContract.MovieEntry;
 import com.myapp.android.popularmovies.data.MovieContract.ReviewEntry;
 import com.myapp.android.popularmovies.data.MovieContract.TrailerEntry;
+import com.myapp.android.popularmovies.data.MovieContract.FavoriteEntry;
 
 
 /**
@@ -50,8 +51,22 @@ public class MovieDBHelper extends SQLiteOpenHelper {
                 MovieEntry.COLUMN_POSTER_IMAGE + " TEXT , " +
                 MovieEntry.COLUMN_RELEASE_DATE + " TEXT , " +
                 MovieEntry.COLUMN_USER_RATING + " TEXT , " +
-                MovieEntry.COLUMN_PIVOT + " TEXT NOT NULL"  +
+                MovieEntry.COLUMN_PIVOT + " TEXT NOT NULL" +
                 " );";
+
+
+        final String SQL_CREATE_FAVORITE_TABLE = "CREATE TABLE " + MovieContract.FavoriteEntry.TABLE_NAME + " (" +
+                FavoriteEntry._ID + " INTEGER PRIMARY KEY," +
+                FavoriteEntry.COLUMN_MOVIE_KEY + " TEXT UNIQUE NOT NULL, " +
+                FavoriteEntry.COLUMN_ORIGINAL_TITLE + " TEXT , " +
+                FavoriteEntry.COLUMN_BACKDROP_PATH + " TEXT , " +
+                FavoriteEntry.COLUMN_PLOT_SYNOPSIS + " TEXT , " +
+                FavoriteEntry.COLUMN_POSTER_IMAGE + " TEXT , " +
+                FavoriteEntry.COLUMN_RELEASE_DATE + " TEXT , " +
+                FavoriteEntry.COLUMN_USER_RATING + " TEXT , " +
+                FavoriteEntry.COLUMN_PIVOT + " TEXT NOT NULL" +
+                " );";
+
 
         final String SQL_CREATE_REVIEW_TABLE = "CREATE TABLE " + ReviewEntry.TABLE_NAME + " (" +
                 ReviewEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -59,13 +74,17 @@ public class MovieDBHelper extends SQLiteOpenHelper {
                 // the ID of the movie entry associated with movie data
 
                 ReviewEntry.COLUMN_MOVIE_ID + " INTEGER  NOT NULL, " +
-                ReviewEntry.COLUMN_AUTHOR + " TEXT NOT NULL" +
-                ReviewEntry.COLUMN_REVIEW_STR + " TEXT, NOT NULL" +
-                ReviewEntry.COLUMN_INDEX + " INTEGER NOT NULL" +
+                ReviewEntry.COLUMN_AUTHOR + " TEXT NOT NULL, " +
+                ReviewEntry.COLUMN_REVIEW_STR + " TEXT NOT NULL, " +
+                ReviewEntry.COLUMN_INDEX + " INTEGER NOT NULL, " +
 
+
+                //" FOREIGN KEY (" + ReviewEntry.COLUMN_MOVIE_ID + ") REFERENCES " +
+                //MovieEntry.TABLE_NAME + " (" + MovieEntry._ID + ") " +
+                //");";
 
                 " FOREIGN KEY (" + ReviewEntry.COLUMN_MOVIE_ID + ") REFERENCES " +
-                MovieEntry.TABLE_NAME + " (" + MovieEntry._ID + ") " +
+                MovieEntry.TABLE_NAME + " (" + MovieEntry.COLUMN_MOVIE_KEY + ") " +
                 ");";
 
 
@@ -78,12 +97,18 @@ public class MovieDBHelper extends SQLiteOpenHelper {
                 TrailerEntry.COLUMN_KEY + " TEXT NOT NULL, " +
 
                 // Set up the location column as a foreign key to Review table.
+
+                //" FOREIGN KEY (" + TrailerEntry.COLUMN_MOVIE_ID + ") REFERENCES " +
+                //TrailerEntry.TABLE_NAME + " (" + MovieEntry._ID + ") " +
+                //");";
+
                 " FOREIGN KEY (" + TrailerEntry.COLUMN_MOVIE_ID + ") REFERENCES " +
-                TrailerEntry.TABLE_NAME + " (" + MovieEntry._ID + ") " +
+                TrailerEntry.TABLE_NAME + " (" + MovieEntry.COLUMN_MOVIE_KEY + ") " +
                 ");";
 
 
         sqLiteDatabase.execSQL(SQL_CREATE_MOVIE_TABLE);
+        sqLiteDatabase.execSQL(SQL_CREATE_FAVORITE_TABLE);
         sqLiteDatabase.execSQL(SQL_CREATE_REVIEW_TABLE);
         sqLiteDatabase.execSQL(SQL_CREATE_TRAILER_TABLE);
     }
@@ -97,6 +122,7 @@ public class MovieDBHelper extends SQLiteOpenHelper {
         // If you want to update the schema without wiping data, commenting out the next 2 lines
         // should be your top priority before modifying this method.
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + MovieEntry.TABLE_NAME);
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + FavoriteEntry.TABLE_NAME);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + ReviewEntry.TABLE_NAME);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TrailerEntry.TABLE_NAME);
         onCreate(sqLiteDatabase);

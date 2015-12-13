@@ -2,6 +2,7 @@ package com.myapp.android.popularmovies;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -48,6 +49,8 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
     private int mPosition;
     private SharedPreferences.OnSharedPreferenceChangeListener mListener = null;
 
+    private String mPivot = null;
+
     public MovieFragment() {
         //movieInfos = new ArrayList<MovieInfo>();
     }
@@ -55,7 +58,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     private static final String[] MOVIE_COLUMNS = {
 
-            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
+            MovieContract.MovieEntry._ID,
             MovieContract.MovieEntry.COLUMN_MOVIE_KEY,
             MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE,
             MovieContract.MovieEntry.COLUMN_PIVOT,
@@ -80,12 +83,11 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
 
 
-
     @Override
     public void onSaveInstanceState(Bundle outState) {
         Log.d(TAG, "onSaveInstanceState called");
         super.onSaveInstanceState(outState);
-       // outState.putParcelableArrayList("movies", movieInfos);
+
 
     }
 
@@ -95,38 +97,20 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
         Log.d(TAG, "onCreate called");
 
         super.onCreate(savedInstanceState);
-        //setRetainInstance(true);
 
-        /*
+        if(savedInstanceState == null)
+        {
 
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+            SharedPreferences sharedPrefs =
+                    PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+            mPivot = sharedPrefs.getString(
+                    getString(R.string.pref_sort_key),
+                    getString(R.string.pref_sort_most_popular));
 
-            mListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-            public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+            mPosition = 0;
 
-                // When preferences change data needs to be re-fetched due to change in conditions
-                mIsData = false;
-
-            }
-        };
-
-
-        prefs.registerOnSharedPreferenceChangeListener(mListener);
-
-        if(savedInstanceState == null || !savedInstanceState.containsKey("movies")) {
-           movieInfos = new ArrayList<MovieInfo>();
-           mIsData = false;
-        }
-        else {
-            Log.d(TAG, "onCreate using savedInstanceState to refresh the view");
-
-            movieInfos = savedInstanceState.getParcelableArrayList("movies");
-            Log.d(TAG, "onCreate using savedInstanceState Size of data retrieved = " + movieInfos.size());
-            mIsData = true;
         }
 
-        */
 
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
@@ -148,11 +132,28 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
+
+        SharedPreferences sharedPrefs =
+                PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+        String mPivotStr = sharedPrefs.getString(
+                getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_most_popular));
+
+        // Some change in list item
+        if (mPivotStr != mPivot)
+        {
+            mPivot = mPivotStr;
+            mPosition = -1;
+            onPivotChanged();
+        }
+
         // xxx Just added from ForecastFragment.xml and also added the button to menu movie_fragment.xml
         if (id == R.id.action_refresh) {
             updateMovies();
             return true;
         }
+
+
 
         return super.onOptionsItemSelected(item);
     }
@@ -164,20 +165,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
         Log.d(TAG, "onCreateView called");
 
-        /*
-        SharedPreferences sharedPrefs =
-                PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String pivot = sharedPrefs.getString(
-                getString(R.string.pref_sort_key),
-                getString(R.string.pref_sort_most_popular));
 
-        Uri moviesWithSettingUri = MovieContract.MovieEntry.buildMovieWithSetting(pivot);
-        Cursor cur = getActivity().getContentResolver().query(MovieContract.MovieEntry.CONTENT_URI, null,
-                MovieContract.MovieEntry.COLUMN_PIVOT + " =?", new String[]{pivot}, null);
-
-
-        mCursorAdapter = new MovieCursorAdapter(getActivity().getApplicationContext(), cur, 0);
-        */
 
         mCursorAdapter = new MovieCursorAdapter(getActivity().getApplicationContext(), null, 0);
 
@@ -196,8 +184,8 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
 
                 Context context = getActivity().getApplicationContext();
-                Toast.makeText(context, "" + position ,
-                              Toast.LENGTH_SHORT).show();
+                //Toast.makeText(context, "" + position ,
+                  //            Toast.LENGTH_SHORT).show();
 
 
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
@@ -209,31 +197,17 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
                             getString(R.string.pref_sort_key),
                             getString(R.string.pref_sort_most_popular));
 
-
-                    //Intent intent = new Intent(getActivity(), DetailActivity.class);
-
-                    //Uri moviesForSettingAndMovieIDUri =
-                    //        MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
-                    //                cursor.getString(COL_MOVIE_KEY));
+                    Log.i(TAG, "Invoking callback for = " + pivot);
 
 
-                    //intent.putExtra("com.myapp.android.popularmovies.SelectedMovie", moviesForSettingAndMovieIDUri);
 
-                    /*
-                    Intent intent = new Intent(getActivity(), DetailActivity.class)
-                            .setData(MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
-                                            cursor.getString(COL_MOVIE_KEY)
-                            ));
+                    if (pivot.equalsIgnoreCase("favorites.desc"))
+                        ((Callback)getActivity()).onItemSelected(MovieContract.FavoriteEntry.buildFavoriteUri(cursor.getLong(COL_MOVIE_KEY)));
+                    else
+                        ((Callback)getActivity()).onItemSelected(MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
+                                cursor.getString(COL_MOVIE_KEY)));
 
-
-                    startActivity(intent);
-
-                    */
-
-                    ((Callback)getActivity()).onItemSelected(MovieContract.MovieEntry.buildMovieWithSettingByMovieId(pivot,
-                            cursor.getString(COL_MOVIE_KEY)));
-
-                    //mPosition = position;
+                    mPosition = position;
 
 
 
@@ -249,6 +223,12 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
         });
 
 
+
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+            gridView.setNumColumns(3);
+        } else{
+            gridView.setNumColumns(2);
+        }
 
 
         return rootView;
@@ -268,28 +248,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
     }
 
 
-    /* xxx Handle settings change 5
-    @Override
-    public void onStart() {
-        Log.d(TAG, "onStart called");
 
-
-        super.onStart();
-
-
-        // Fetch new data on preference change or when there is no data to begin with
-        //if (!mIsData) {
-            //movieInfos = new ArrayList<MovieInfo>();
-            //updateMovies();
-
-        //}
-
-
-
-        updateMovies();
-
-    }
-    */
 
     //Based on a stackoverflow snippet
     private boolean isNetworkAvailable() {
@@ -302,6 +261,11 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
+
+        if(savedInstanceState == null) {
+            updateMovies();
+        }
+
         getLoaderManager().initLoader(MOVIE_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
@@ -309,6 +273,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     // since we read the pivot when we create the loader, all we need to do is restart things
     void onPivotChanged() {
+
         updateMovies();
         getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
     }
@@ -322,6 +287,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
             return;
         }
 
+
         FetchMovieInfoTask movieInfoTask = new FetchMovieInfoTask(getActivity());
         SharedPreferences sharedPrefs =
                 PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -330,7 +296,12 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
                 getString(R.string.pref_sort_most_popular));
 
         Log.d(TAG, "Sort by = " + pivot);
-        //mSortBy = pivot;
+
+
+        mPivot = pivot;
+
+        if (mPivot.equalsIgnoreCase("favorites.desc"))
+            return;
 
 
         movieInfoTask.execute(pivot);
@@ -345,12 +316,23 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
                 getString(R.string.pref_sort_key),
                 getString(R.string.pref_sort_most_popular));
 
+        Uri moviesUri;
 
-        Uri moviesForSettingUri = MovieContract.MovieEntry.buildMovieWithSetting(pivot);
+        if (pivot.equalsIgnoreCase("favorites.desc"))
+        {
 
+            moviesUri = MovieContract.FavoriteEntry.CONTENT_URI;
 
+        }
+        else
+        {
+            moviesUri = MovieContract.MovieEntry.buildMovieWithSetting(pivot);
+
+        }
+
+        Log.i(TAG, "moviesUri = " + moviesUri.toString());
         return new CursorLoader(getActivity(),
-                moviesForSettingUri,
+                moviesUri,
                 MOVIE_COLUMNS,
                 null,
                 null,
@@ -359,6 +341,59 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+
+        if (cursor != null)
+        {
+
+            SharedPreferences sharedPrefs =
+                    PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String pivot = sharedPrefs.getString(
+                    getString(R.string.pref_sort_key),
+                    getString(R.string.pref_sort_most_popular));
+
+            if (pivot.equalsIgnoreCase("favorites.desc"))
+            {
+                if (!cursor.moveToFirst())
+                {
+                    Toast.makeText(getActivity(), getString(R.string.no_favorites_selected),
+                                    Toast.LENGTH_SHORT).show();
+
+                }
+
+            }
+
+
+            if(((MainActivity) this.getActivity()).isLayoutTwoPane()){
+                if (gridView.getSelectedItemPosition() == GridView.INVALID_POSITION) {
+                    gridView.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            int itemPosition = 0;
+                            if (mPosition != GridView.INVALID_POSITION) {
+                                itemPosition = mPosition;
+                            }
+                            int tot = gridView.getCount();
+                            if (tot > 0 && tot >= itemPosition) {
+                                gridView.setItemChecked(itemPosition, true);
+                                gridView.performItemClick(gridView.getChildAt(itemPosition), itemPosition, itemPosition);
+                                gridView.smoothScrollToPosition(itemPosition);
+                                //so that if mPosition is invalid it is set to 0
+                                mPosition = itemPosition;
+                            }
+                        }
+                    }, 1000);
+                }
+            }
+
+            if (mPosition != GridView.INVALID_POSITION) {
+                gridView.smoothScrollToPosition(mPosition);
+            }
+
+
+        }
+
+
+
         mCursorAdapter.swapCursor(cursor);
     }
 

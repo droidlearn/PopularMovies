@@ -125,14 +125,14 @@ public class FetchMovieInfoTask extends AsyncTask<String, Void, Void> {
                     backdrop_path = (String) movieInfo.get(TMD_backdrop_path);
 
                 if (null != movieInfo.get(TMD_user_rating) && ! JSONObject.NULL.equals(movieInfo.get(TMD_user_rating)) ) {
-                    Double user_rating_db = (Double) movieInfo.get(TMD_user_rating);
+                    String urating = String.valueOf(movieInfo.get(TMD_user_rating));
 
                     if (null != movieInfo.get(TMD_vote_count) && ! JSONObject.NULL.equals(movieInfo.get(TMD_vote_count)) ) {
                         Integer vc = movieInfo.getInt(TMD_vote_count);
                         vote_count = vc.toString();
                     }
 
-                    user_rating = Double.toString(user_rating_db) + " from " + vote_count + " reviews";
+                    user_rating = urating  + " from " + vote_count + " reviews";
 
                 }
 

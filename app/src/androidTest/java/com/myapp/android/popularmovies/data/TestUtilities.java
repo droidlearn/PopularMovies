@@ -61,8 +61,9 @@ public class TestUtilities extends AndroidTestCase {
     static ContentValues createReviewValues(long movieRowId) {
         // Create a new map of values, where column names are the keys
         ContentValues testValues = new ContentValues();
-        testValues.put(MovieContract.ReviewEntry.COLUMN_MOVIE_KEY, movieRowId);
-        testValues.put(MovieContract.ReviewEntry.COLUMN_REVIEW_ID, "1");
+        testValues.put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, movieRowId);
+        testValues.put(MovieContract.ReviewEntry.COLUMN_AUTHOR, "droidlearn");
+        testValues.put(MovieContract.ReviewEntry.COLUMN_INDEX, 0);
         testValues.put(MovieContract.ReviewEntry.COLUMN_REVIEW_STR, "This is test data for review");
 
         return testValues;

@@ -40,6 +40,7 @@ public class MovieContract {
     public static final String PATH_MOVIE = "movie";
     public static final String PATH_REVIEW = "review";
     public static final String PATH_TRAILER = "trailer";
+    public static final String PATH_FAVORITE = "favorite";
 
 
     public static final class MovieEntry implements BaseColumns {
@@ -117,6 +118,62 @@ public class MovieContract {
 
 
     }
+
+
+    public static final class FavoriteEntry implements BaseColumns {
+
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_FAVORITE).build();
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_FAVORITE;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_FAVORITE;
+
+        public static final String TABLE_NAME = "favorite";
+
+        // Column with the foreign key into the review table.
+        public static final String COLUMN_MOVIE_KEY = "movie_id";
+
+        public static final String COLUMN_ORIGINAL_TITLE = "original_title";
+        public static final String COLUMN_POSTER_IMAGE = "poster_image";
+
+        public static final String COLUMN_PLOT_SYNOPSIS = "plot_synopsis";
+
+        public static final String COLUMN_USER_RATING = "user_rating";
+        public static final String COLUMN_RELEASE_DATE = "release_date";
+
+        public static final String COLUMN_BACKDROP_PATH = "backdrop_path";
+
+        public static final String COLUMN_PIVOT = "pivot_type";
+
+
+        public static Uri buildFavoriteUri(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+
+        public static Uri buildFavoriteWithSetting(String setting) {
+            return CONTENT_URI.buildUpon().appendPath(setting).build();
+        }
+
+        public static Uri buildFavoriteWithSettingByMovieId(String setting, String id) {
+            return CONTENT_URI.buildUpon().appendPath(setting).appendPath(id).build();
+        }
+
+        public static String getTypeSettingFromUri(Uri uri) {
+            return uri.getPathSegments().get(1);
+        }
+
+        public static String getMovieIDSettingFromUri(Uri uri) {
+            return uri.getPathSegments().get(2);
+        }
+
+
+    }
+
+
+
 
 
     /* Inner class that defines the table contents of the location table */

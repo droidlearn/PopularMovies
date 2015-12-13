@@ -50,6 +50,6 @@ public class TestUriMatcher extends AndroidTestCase {
         //assertEquals("Error: The WEATHER WITH LOCATION AND DATE URI was matched incorrectly.",
         //        testMatcher.match(TEST_WEATHER_WITH_LOCATION_AND_DATE_DIR), WeatherProvider.WEATHER_WITH_LOCATION_AND_DATE);
         assertEquals("Error: The REVIEW URI was matched incorrectly.",
-                testMatcher.match(TEST_REVIEW_DIR), MovieProvider.REVIEW);
+                testMatcher.match(TEST_REVIEW_DIR), MovieProvider.REVIEW_LIST);
     }
 }

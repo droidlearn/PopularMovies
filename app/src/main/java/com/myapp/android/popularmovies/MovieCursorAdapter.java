@@ -87,52 +87,6 @@ public class MovieCursorAdapter extends CursorAdapter {
     }
 
 
-    /*
-    public MovieInfo getItem(int position)
-    {
-        if (null != mCursor) {
-
-            if (mCursor.moveToPosition(position)) {
-
-                return(new MovieInfo(mCursor.getString(MovieFragment.COL_MOVIE_KEY),
-                        mCursor.getString(MovieFragment.COL_MOVIE_ORIGINAL_TITLE),
-                        mCursor.getString(MovieFragment.COL_MOVIE_POSTER_IMAGE),
-                        mCursor.getString(MovieFragment.COL_MOVIE_PLOT_SYNOPSIS),
-                        mCursor.getString(MovieFragment.COL_MOVIE_USER_RATING),
-                        mCursor.getString(MovieFragment.COL_MOVIE_RELEASE_DATE),
-                        mCursor.getString(MovieFragment.COL_MOVIE_BACKDROP_PATH)));
-            }
-
-
-        }
-        return null;
-
-    }
-
-    */
-
-    /*
-
-    public long getItemId(int position) {
-
-        Log.i(TAG, "#####In getITemID = " + position);
-        mPosition = position;
-        return position;
-    }
-
-   */
-
-
-    /*
-    public int getCount() {
-        if (null != mCursor) {
-            Log.i(TAG, "#####Cur count" + mCursor.getCount());
-            return mCursor.getCount();
-        }
-        else
-            return 0;
-    }
-    */
 
     /*
         Remember that these views are reused as needed.
@@ -153,9 +107,6 @@ public class MovieCursorAdapter extends CursorAdapter {
         // we'll keep the UI functional with a simple (and slow!) binding.
 
 
-        //xxx ArrayList<MovieInfo> mMovieInfo =  convertContentValuesToMovieInfos(cur);
-
-        //MovieInfo mi = getCurItem(cur);
 
         MovieInfo mi = new MovieInfo(cur.getString(MovieFragment.COL_MOVIE_KEY),
                 cur.getString(MovieFragment.COL_MOVIE_ORIGINAL_TITLE),
